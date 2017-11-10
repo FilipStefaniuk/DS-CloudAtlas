@@ -41,8 +41,7 @@ public class ValueDuration extends ValueSimple<Long> {
 	
 	@Override
 	public Type getType() {
-		// TODO
-		throw new UnsupportedOperationException("Not yet implemented");
+		return TypePrimitive.DURATION;
 	}
 	
 	@Override

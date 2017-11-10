@@ -216,7 +216,7 @@ public class AttributesMap implements Iterable<Entry<Attribute, Value>>, Cloneab
 	 * @param name name of the attribute
 	 * @return the value mapped to specified attribute or <code>null</code> if it does not exist
 	 * @see #getOrNull(Attribute)
-	 * @see #getOr(String)
+	 * @see #getOrNull(String)
 	 */
 	public Value getOrNull(String name) {
 		return getOrNull(new Attribute(name));
@@ -252,7 +252,7 @@ public class AttributesMap implements Iterable<Entry<Attribute, Value>>, Cloneab
 	 * @see java.util.Iterator
 	 * @see java.lang.Iterable
 	 */
-	@Override
+
 	public Iterator<Entry<Attribute, Value>> iterator() {
 		return map.entrySet().iterator();
 	}
