@@ -33,10 +33,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
 
-import pl.edu.mimuw.cloudatlas.model.TypeCollection;
-import pl.edu.mimuw.cloudatlas.model.Value;
-import pl.edu.mimuw.cloudatlas.model.ValueList;
-
 /**
  * A value representing a list of values of the specified type. Implements <code>List</code> interface.
  * <p>
@@ -66,7 +62,7 @@ public class ValueList extends ValueSimple<List<Value>> implements List<Value> {
 	 * @param elementType type of elements stored in this list
 	 */
 	public ValueList(Type elementType) {
-		super(new ArrayList<Value>());
+		super(new ArrayList<>());
 		type = new TypeCollection(Type.PrimaryType.LIST, elementType);
 	}
 	

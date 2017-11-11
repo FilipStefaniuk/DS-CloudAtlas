@@ -25,8 +25,6 @@
 package pl.edu.mimuw.cloudatlas.model;
 
 import pl.edu.mimuw.cloudatlas.model.Type.PrimaryType;
-import pl.edu.mimuw.cloudatlas.model.Value;
-import pl.edu.mimuw.cloudatlas.model.ValueInt;
 
 /**
  * A class that wraps a Java <code>Long</code> object.
@@ -48,7 +46,7 @@ public class ValueInt extends ValueSimple<Long> {
 	
 	@Override
 	public Value getDefaultValue() {
-		return new ValueInt(0l);
+		return new ValueInt(0L);
 	}
 	
 	@Override
@@ -90,7 +88,7 @@ public class ValueInt extends ValueSimple<Long> {
 		sameTypesOrThrow(value, Operation.DIVIDE);
 		if(value.isNull())
 			return new ValueDouble(null);
-		if(((ValueInt)value).getValue() == 0l)
+		if(((ValueInt)value).getValue() == 0L)
 			throw new ArithmeticException("Division by zero.");
 		if(isNull())
 			return new ValueDouble(null);
@@ -102,7 +100,7 @@ public class ValueInt extends ValueSimple<Long> {
 		sameTypesOrThrow(value, Operation.MODULO);
 		if(value.isNull())
 			return new ValueInt(null);
-		if(((ValueInt)value).getValue() == 0l)
+		if(((ValueInt)value).getValue() == 0L)
 			throw new ArithmeticException("Division by zero.");
 		if(isNull())
 			return new ValueInt(null);
@@ -124,8 +122,7 @@ public class ValueInt extends ValueSimple<Long> {
 			case INT:
 				return this;
 			case STRING:
-				return getValue() == null? ValueString.NULL_STRING : new ValueString(Long.toString(getValue()
-						.longValue()));
+				return getValue() == null? ValueString.NULL_STRING : new ValueString(Long.toString(getValue()));
 			default:
 				throw new UnsupportedConversionException(getType(), type);
 		}

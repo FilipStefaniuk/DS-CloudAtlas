@@ -24,9 +24,6 @@
 
 package pl.edu.mimuw.cloudatlas.model;
 
-import pl.edu.mimuw.cloudatlas.model.Value;
-import pl.edu.mimuw.cloudatlas.model.ValueDouble;
-
 /**
  * A class that wraps a Java <code>Double</code> object.
  */

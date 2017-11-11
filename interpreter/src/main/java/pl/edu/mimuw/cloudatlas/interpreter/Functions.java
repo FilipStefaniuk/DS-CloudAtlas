@@ -51,7 +51,6 @@ class Functions {
 	private static Functions instance = null;
 
 	private static final UnaryOperation ROUND = new UnaryOperation() {
-		@Override
 		public Value perform(Value v) {
 			if(v.getType().isCompatible(TypePrimitive.DOUBLE)) {
 				if(v.isNull())
@@ -129,7 +128,6 @@ class Functions {
 	};
 
 	private static final AggregationOperation AND = new AggregationOperation() {
-		@Override
 		public ValueBoolean perform(ValueList values) { // lazy
 			ValueList nlist = Result.filterNullsList(values);
 			if(nlist.getValue() == null) {
@@ -157,7 +155,6 @@ class Functions {
 	};
 
 	private static final AggregationOperation MIN = new AggregationOperation() {
-		@Override
 		public Value perform(ValueList values) {
 			ValueList nlist = Result.filterNullsList(values);
 			if(nlist.getValue() == null || nlist.isEmpty()) {
@@ -174,7 +171,6 @@ class Functions {
 	};
 
 	private static final AggregationOperation MAX = new AggregationOperation() {
-		@Override
 		public Value perform(ValueList values) {
 			ValueList nlist = Result.filterNullsList(values);
 			if(nlist.getValue() == null || nlist.isEmpty()) {
@@ -191,7 +187,6 @@ class Functions {
 	};
 
 	private static final TransformOperation UNFOLD = new TransformOperation() {
-		@Override
 		public ValueList perform(ValueList values) {
 			if(!((TypeCollection)values.getType()).getElementType().isCollection()) {
 				throw new IllegalArgumentException("All elements must have a collection compatible type.");
@@ -218,7 +213,6 @@ class Functions {
 	};
 
 	private static final TransformOperation DISTINCT = new TransformOperation() {
-		@Override
 		public ValueList perform(ValueList values) {
 			if(values.isEmpty())
 				return new ValueList(((TypeCollection)values.getType()).getElementType());
@@ -233,7 +227,6 @@ class Functions {
 	};
 
 	private static final TransformOperation SORT = new TransformOperation() {
-		@Override
 		public ValueList perform(ValueList values) {
 			if(values.isEmpty())
 				return new ValueList(((TypeCollection)values.getType()).getElementType());

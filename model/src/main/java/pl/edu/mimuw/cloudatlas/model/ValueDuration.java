@@ -25,6 +25,9 @@
 package pl.edu.mimuw.cloudatlas.model;
 
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * A class representing duration in milliseconds. The duration can be negative. This is a simple wrapper of a Java
  * <code>Long</code> object.
@@ -46,8 +49,7 @@ public class ValueDuration extends ValueSimple<Long> {
 	
 	@Override
 	public Value getDefaultValue() {
-		// TODO
-		throw new UnsupportedOperationException("Not yet implemented");
+		return new ValueDuration(0L);
 	}
 	
 	/**
@@ -57,7 +59,7 @@ public class ValueDuration extends ValueSimple<Long> {
 	 * @param milliseconds a number of milliseconds (an absolute value does not have to be lower than 1000)
 	 */
 	public ValueDuration(long seconds, long milliseconds) {
-		this(seconds * 1000l + milliseconds);
+		this(seconds * 1000L + milliseconds);
 	}
 	
 	/**
@@ -68,7 +70,7 @@ public class ValueDuration extends ValueSimple<Long> {
 	 * @param milliseconds a number of milliseconds (an absolute value does not have to be lower than 1000)
 	 */
 	public ValueDuration(long minutes, long seconds, long milliseconds) {
-		this(minutes * 60l + seconds, milliseconds);
+		this(minutes * 60L + seconds, milliseconds);
 	}
 	
 	/**
@@ -80,7 +82,7 @@ public class ValueDuration extends ValueSimple<Long> {
 	 * @param milliseconds a number of milliseconds (an absolute value does not have to be lower than 1000)
 	 */
 	public ValueDuration(long hours, long minutes, long seconds, long milliseconds) {
-		this(hours * 60l + minutes, seconds, milliseconds);
+		this(hours * 60L + minutes, seconds, milliseconds);
 	}
 	
 	/**
@@ -93,7 +95,7 @@ public class ValueDuration extends ValueSimple<Long> {
 	 * @param milliseconds a number of milliseconds (an absolute value does not have to be lower than 1000)
 	 */
 	public ValueDuration(long days, long hours, long minutes, long seconds, long milliseconds) {
-		this(days * 24l + hours, minutes, seconds, milliseconds);
+		this(days * 24L + hours, minutes, seconds, milliseconds);
 	}
 	
 	/**
@@ -118,55 +120,99 @@ public class ValueDuration extends ValueSimple<Long> {
 	}
 	
 	private static long parseDuration(String value) {
-		// TODO
-		throw new UnsupportedOperationException("Not yet implemented");
+		Pattern pattern = Pattern.compile("^([-+])([1-9]\\d*)\\s([01]\\d|2[0-3]):([0-5]\\d):([0-5]\\d).(\\d{3})$");
+		Matcher matcher = pattern.matcher(value);
+		if (! matcher.find())
+			throw new IllegalArgumentException(value.concat(" has illegal format, must be sd hh:mm:ss.lll"));
+
+		Long sign = matcher.group(1).equals("+") ? 1L : -1L;
+		Long days = Long.parseLong(matcher.group(2));
+		Long hours = Long.parseLong(matcher.group(3));
+		Long minutes = Long.parseLong(matcher.group(4));
+		Long seconds = Long.parseLong(matcher.group(5));
+		Long miliseconds = Long.parseLong(matcher.group(6));
+
+		return sign * ((((days * 24L + hours) * 60L + minutes) * 60L + seconds) * 1000L + miliseconds);
 	}
 	
 	@Override
 	public ValueBoolean isLowerThan(Value value) {
-		// TODO
-		throw new UnsupportedOperationException("Not yet implemented");
+		sameTypesOrThrow(value, Operation.COMPARE);
+		if (isNull() || value.isNull())
+			return new ValueBoolean(null);
+		return new ValueBoolean(getValue() < ((ValueDuration) value).getValue());
 	}
 	
 	@Override
 	public ValueDuration addValue(Value value) {
-		// TODO
-		throw new UnsupportedOperationException("Not yet implemented");
+		if(!value.getType().isCompatible(TypePrimitive.DURATION))
+			throw new IncompatibleTypesException(getType(), value.getType(), Operation.ADD);
+		if (isNull() || value.isNull())
+			return new ValueDuration((Long) null);
+		return new ValueDuration(getValue() + ((ValueDuration) value).getValue());
 	}
 	
 	@Override
 	public ValueDuration subtract(Value value) {
-		// TODO
-		throw new UnsupportedOperationException("Not yet implemented");
+		if(!value.getType().isCompatible(TypePrimitive.DURATION))
+			throw new IncompatibleTypesException(getType(), value.getType(), Operation.SUBTRACT);
+		if (isNull() || value.isNull())
+			return new ValueDuration((Long) null);
+		return new ValueDuration(getValue() - ((ValueDuration) value).getValue());
 	}
 	
 	@Override
 	public ValueDuration multiply(Value value) {
-		// TODO
-		throw new UnsupportedOperationException("Not yet implemented");
+		if (value.getType().isCompatible(TypePrimitive.INTEGER)) {
+			if (isNull() || value.isNull())
+				return new ValueDuration((Long) null);
+			return new ValueDuration(getValue() * ((ValueInt) value).getValue());
+		} else if (value.getType().isCompatible(TypePrimitive.DURATION)) {
+			if (isNull() || value.isNull())
+				return new ValueDuration((Long) null);
+			return new ValueDuration(getValue() * ((ValueDuration) value).getValue());
+		}
+		throw new IncompatibleTypesException(getType(), value.getType(), Operation.ADD);
 	}
 	
 	@Override
 	public Value divide(Value value) {
-		// TODO
-		throw new UnsupportedOperationException("Not yet implemented");
+		sameTypesOrThrow(value, Operation.DIVIDE);
+		if (isNull() || value.isNull())
+			return new ValueDuration((Long) null);
+		if(((ValueDuration)value).getValue() == 0L)
+			throw new ArithmeticException("Division by zero.");
+		return new ValueDuration(getValue() / ((ValueDuration) value).getValue());
 	}
 	
 	@Override
 	public ValueDuration modulo(Value value) {
-		// TODO
-		throw new UnsupportedOperationException("Not yet implemented");
+		sameTypesOrThrow(value, Operation.MODULO);
+		if (isNull() || value.isNull())
+			return new ValueDuration((Long) null);
+		if(((ValueDuration)value).getValue() == 0L)
+			throw new ArithmeticException("Division by zero.");
+		return new ValueDuration(getValue() % ((ValueDuration) value).getValue());
 	}
 	
 	@Override
 	public ValueDuration negate() {
-		// TODO
-		throw new UnsupportedOperationException("Not yet implemented");
+		return new ValueDuration(isNull() ? null : -getValue());
 	}
 	
 	@Override
 	public Value convertTo(Type type) {
-		// TODO
-		throw new UnsupportedOperationException("Not yet implemented");
+		switch(type.getPrimaryType()) {
+			case DOUBLE:
+				return new ValueDouble(getValue() == null? null : getValue().doubleValue());
+			case DURATION:
+				return this;
+			case INT:
+				return new ValueInt(getValue());
+			case STRING:
+				return getValue() == null? ValueString.NULL_STRING : new ValueString(Long.toString(getValue()));
+			default:
+				throw new UnsupportedConversionException(getType(), type);
+		}
 	}
 }

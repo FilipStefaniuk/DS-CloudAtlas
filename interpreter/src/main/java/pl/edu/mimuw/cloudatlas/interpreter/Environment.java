@@ -24,11 +24,11 @@
 
 package pl.edu.mimuw.cloudatlas.interpreter;
 
+import pl.edu.mimuw.cloudatlas.model.ValueNull;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import pl.edu.mimuw.cloudatlas.model.ValueNull;
 
 class Environment {
 	private final TableRow row;

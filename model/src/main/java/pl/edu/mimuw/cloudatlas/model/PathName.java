@@ -57,7 +57,7 @@ public class PathName {
 		if(!name.matches("(/\\w+)*"))
 			throw new IllegalArgumentException("Incorrect fully qualified name: " + name + ".");
 		this.name = name;
-		components = name.equals("")? new ArrayList<String>() : Arrays.asList(name.substring(1).split("/"));
+		components = name.equals("")? new ArrayList<>() : Arrays.asList(name.substring(1).split("/"));
 	}
 	
 	/**
@@ -69,7 +69,7 @@ public class PathName {
 	 * @throws IllegalArgumentException if any zone name is incorrect
 	 */
 	public PathName(Collection<String> components) {
-		this.components = new ArrayList<String>(components);
+		this.components = new ArrayList<>(components);
 		if(components.isEmpty())
 			this.name = "";
 		else {

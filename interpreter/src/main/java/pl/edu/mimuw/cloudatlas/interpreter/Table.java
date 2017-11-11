@@ -88,7 +88,7 @@ public class Table implements Iterable<TableRow> {
 
 	public int getColumnIndex(String column) {
 		try {
-			return headersMap.get(column).intValue();
+			return headersMap.get(column);
 		} catch(NullPointerException exception) {
 			throw new NoSuchAttributeException(column);
 		}

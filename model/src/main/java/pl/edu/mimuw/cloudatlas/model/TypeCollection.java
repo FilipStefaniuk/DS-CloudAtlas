@@ -26,15 +26,12 @@ package pl.edu.mimuw.cloudatlas.model;
 
 import java.util.Collection;
 
-import pl.edu.mimuw.cloudatlas.model.Type;
-import pl.edu.mimuw.cloudatlas.model.TypePrimitive;
-import pl.edu.mimuw.cloudatlas.model.Value;
-import pl.edu.mimuw.cloudatlas.model.ValueNull;
+
 
 /**
  * Represents a collection type with specified element type.
  * 
- * @see TypePrimitve
+ * @see TypePrimitive
  */
 public class TypeCollection extends Type {
 	private final Type elementType;

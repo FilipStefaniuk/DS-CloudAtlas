@@ -112,7 +112,7 @@ public class Interpreter {
 	private static Boolean getBoolean(Value value) {
 		if(value.getType().isCompatible(TypePrimitive.BOOLEAN)) {
 			Boolean b = ((ValueBoolean)value).getValue();
-			return b == null? false : b.booleanValue();
+			return b != null && b;
 		}
 		throw new InvalidTypeException(TypePrimitive.BOOLEAN, value.getType());
 	}

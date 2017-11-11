@@ -24,14 +24,12 @@
 
 package pl.edu.mimuw.cloudatlas.model;
 
-import pl.edu.mimuw.cloudatlas.model.Value;
-import pl.edu.mimuw.cloudatlas.model.ValueNull;
 
 /**
  * A special null value of an unknown type introduced to deal with nulls. This class is a singleton.
  * 
- * @see TypePrimitve#NULL
- * @see Type#isCompatible(Value)
+ * @see TypePrimitive#NULL
+ * @see Type#isCompatible(Type) (Value)
  */
 public class ValueNull extends Value {
 	private static ValueNull instance = null;

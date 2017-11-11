@@ -43,7 +43,7 @@ public class UnsupportedValueOperationException extends UnsupportedOperationExce
 	 * @param left type of a value that was an argument of an operation that caused this exception
 	 * @param operation the operation that caused this exception
 	 */
-	protected UnsupportedValueOperationException(Type left, Operation operation) {
+	 UnsupportedValueOperationException(Type left, Operation operation) {
 		super("Type: " + left + " does not provide operation " + operation + ".");
 		this.left = left;
 		this.operation = operation;
