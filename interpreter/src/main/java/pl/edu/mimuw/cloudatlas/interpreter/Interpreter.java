@@ -127,7 +127,7 @@ public class Interpreter {
 
 	public class ProgramInterpreter implements Program.Visitor<List<QueryResult>, ZMI> {
 		public List<QueryResult> visit(ProgramC program, ZMI zmi) {
-			List<QueryResult> results = new ArrayList<QueryResult>();
+			List<QueryResult> results = new ArrayList<>();
 			for(Statement s : program.liststatement_) {
 				try {
 					List<QueryResult> l = s.accept(new StatementInterpreter(), zmi);
@@ -280,13 +280,13 @@ public class Interpreter {
 
 	public class SelItemInterpreter implements SelItem.Visitor<QueryResult, Table> {
 		public QueryResult visit(SelItemC selItem, Table table) {
-			Environment env = null; // TODO
+			Environment env = new Environment(table);
 			Result result = selItem.condexpr_.accept(new CondExprInterpreter(), env);
 			return new QueryResult(result.getValue());
 		}
 
 		public QueryResult visit(AliasedSelItemC selItem, Table table) {
-			Environment env = null; // TODO
+			Environment env = new Environment(table);
 			Result result = selItem.condexpr_.accept(new CondExprInterpreter(), env);
 			return new QueryResult(new Attribute(selItem.qident_), result.getValue());
 		}
@@ -329,8 +329,13 @@ public class Interpreter {
 		}
 
 		public Result visit(CondExprAndC expr, Environment env) {
-			// TODO
-			throw new UnsupportedOperationException("Not yet implemented");
+			try {
+				Result left = expr.condexpr_1.accept(new CondExprInterpreter(), env);
+				Result right = expr.condexpr_2.accept(new CondExprInterpreter(), env);
+				return left.and(right);
+			} catch(Exception exception) {
+				throw new InsideQueryException(PrettyPrinter.print(expr), exception);
+			}
 		}
 
 		public Result visit(CondExprNotC expr, Environment env) {
@@ -368,8 +373,13 @@ public class Interpreter {
 		}
 
 		public Result visit(BasicExprMulC expr, Environment env) {
-			// TODO
-			throw new UnsupportedOperationException("Not yet implemented");
+			try {
+				Result left = expr.basicexpr_1.accept(new BasicExprInterpreter(), env);
+				Result right = expr.basicexpr_2.accept(new BasicExprInterpreter(), env);
+				return left.multiply(right);
+			} catch(Exception exception) {
+				throw new InsideQueryException(PrettyPrinter.print(expr), exception);
+			}
 		}
 
 		public Result visit(BasicExprDivC expr, Environment env) {
@@ -406,7 +416,7 @@ public class Interpreter {
 
 		public Result visit(EFunC expr, Environment env) {
 			try {
-				List<Result> arguments = new ArrayList<Result>(expr.listcondexpr_.size());
+				List<Result> arguments = new ArrayList<>(expr.listcondexpr_.size());
 				for(CondExpr arg : expr.listcondexpr_)
 					arguments.add(arg.accept(new CondExprInterpreter(), env));
 
@@ -469,8 +479,7 @@ public class Interpreter {
 		}
 
 		public Result visit(RelOpEqC op, ValuesPair pair) {
-			// TODO
-			throw new UnsupportedOperationException("Not yet implemented");
+			return pair.left.isEqual(pair.right);
 		}
 
 		public Result visit(RelOpNeC op, ValuesPair pair) {
@@ -482,8 +491,7 @@ public class Interpreter {
 		}
 
 		public Result visit(RelOpLeC op, ValuesPair pair) {
-			// TODO
-			throw new UnsupportedOperationException("Not yet implemented");
+			return pair.left.isLowerThan(pair.right).or(pair.left.isEqual(pair.right));
 		}
 
 		public Result visit(RelOpGeC op, ValuesPair pair) {

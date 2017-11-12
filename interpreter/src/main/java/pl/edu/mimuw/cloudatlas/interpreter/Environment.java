@@ -24,6 +24,7 @@
 
 package pl.edu.mimuw.cloudatlas.interpreter;
 
+import pl.edu.mimuw.cloudatlas.model.Value;
 import pl.edu.mimuw.cloudatlas.model.ValueNull;
 
 import java.util.HashMap;
@@ -32,7 +33,7 @@ import java.util.Map;
 
 class Environment {
 	private final TableRow row;
-	private final Map<String, Integer> columns = new HashMap<String, Integer>();
+	private final Map<String, Integer> columns = new HashMap<>();
 
 	public Environment(TableRow row, List<String> columns) {
 		this.row = row;
@@ -41,9 +42,21 @@ class Environment {
 			this.columns.put(c, i++);
 	}
 
+	public Environment(Table table) {
+		List<String> columns = table.getColumns();
+		Value[] values = new Value[columns.size()];
+		int i = 0;
+		for(String c : columns) {
+			values[i] = table.getColumn(c);
+			this.columns.put(c, i++);
+		}
+		row = new TableRow(values);
+	}
+
 	public Result getIdent(String ident) {
 		try {
-			return new ResultSingle(row.getIth(columns.get(ident)));
+			Value value = row.getIth(columns.get(ident));
+			return value.getType().isCollection() ? new ResultColumn(value) : new ResultSingle(value);
 		} catch(NullPointerException exception) {
 			return new ResultSingle(ValueNull.getInstance());
 		}

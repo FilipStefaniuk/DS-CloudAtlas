@@ -134,6 +134,8 @@ abstract class Result {
 	};
 
 	protected abstract Result binaryOperationTyped(BinaryOperation operation, ResultSingle right);
+	protected abstract Result binaryOperationTyped(BinaryOperation operation, ResultList right);
+	protected abstract Result binaryOperationTyped(BinaryOperation operation, ResultColumn right);
 
 	public Result binaryOperation(BinaryOperation operation, Result right) {
 		return right.callMe(operation, this);
@@ -149,15 +151,9 @@ abstract class Result {
 
 	public abstract ValueList getColumn();
 
-	public ResultSingle aggregationOperation(AggregationOperation operation) {
-		// TODO
-		throw new UnsupportedOperationException("Not yet implemented");
-	}
+	public abstract ResultSingle aggregationOperation(AggregationOperation operation);
 
-	public Result transformOperation(TransformOperation operation) {
-		// TODO
-		throw new UnsupportedOperationException("Not yet implemented");
-	}
+	public abstract Result transformOperation(TransformOperation operation);
 
 	public Result isEqual(Result right) {
 		return right.callMe(IS_EQUAL, this);
@@ -208,7 +204,7 @@ abstract class Result {
 	}
 
 	protected static ValueList filterNullsList(ValueList list) {
-		List<Value> result = new ArrayList<Value>();
+		List<Value> result = new ArrayList<>();
 		if(list.isEmpty())
 			return new ValueList(result, ((TypeCollection)list.getType()).getElementType());
 		for(Value v : list)

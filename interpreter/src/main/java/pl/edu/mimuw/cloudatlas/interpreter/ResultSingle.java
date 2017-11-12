@@ -24,12 +24,12 @@
 
 package pl.edu.mimuw.cloudatlas.interpreter;
 
-import pl.edu.mimuw.cloudatlas.model.Type;
-import pl.edu.mimuw.cloudatlas.model.Value;
-import pl.edu.mimuw.cloudatlas.model.ValueBoolean;
-import pl.edu.mimuw.cloudatlas.model.ValueList;
+import pl.edu.mimuw.cloudatlas.model.*;
+
+import java.util.ArrayList;
 
 class ResultSingle extends Result {
+
 	private final Value value;
 
 	public ResultSingle(Value value) {
@@ -39,6 +39,32 @@ class ResultSingle extends Result {
 	@Override
 	protected ResultSingle binaryOperationTyped(BinaryOperation operation, ResultSingle right) {
 		return new ResultSingle(operation.perform(value, right.value));
+	}
+
+	@Override
+	protected Result binaryOperationTyped(BinaryOperation operation, ResultColumn right) {
+		if (this.getValue().isNull() || right.getValue().isNull())
+			return new ResultColumn(ValueNull.getInstance());
+
+		ArrayList<Value> newList = new ArrayList<>();
+		for (Value value : right.getColumn())
+			newList.add(operation.perform(this.value, value));
+
+		Type t = (newList.isEmpty()) ? this.value.getType() : newList.get(0).getType();
+		return new ResultColumn(new ValueList(newList, t));
+	}
+
+	@Override
+	protected Result binaryOperationTyped(BinaryOperation operation, ResultList right) {
+		if (this.getValue().isNull() || right.getValue().isNull())
+			return new ResultList(ValueNull.getInstance());
+
+		ArrayList<Value> newList = new ArrayList<>();
+		for (Value value : right.getColumn())
+			newList.add(operation.perform(this.value, value));
+
+		Type t = (newList.isEmpty()) ? this.value.getType() : newList.get(0).getType();
+		return new ResultList(new ValueList(newList, t));
 	}
 
 	@Override
@@ -64,6 +90,16 @@ class ResultSingle extends Result {
 	@Override
 	public ValueList getColumn() {
 		throw new UnsupportedOperationException("Not a ResultColumn.");
+	}
+
+	@Override
+	public ResultSingle aggregationOperation(AggregationOperation operation) {
+		throw new UnsupportedOperationException("Aggregation operations not supported on ResultSingle");
+	}
+
+	@Override
+	public Result transformOperation(TransformOperation operation) {
+		throw new UnsupportedOperationException("Transform operations not supported on ResultSingle");
 	}
 
 	@Override
