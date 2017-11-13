@@ -15,7 +15,7 @@ public class ResultList extends Result {
     @Override
     protected Result binaryOperationTyped(Result.BinaryOperation operation, ResultSingle right) {
         if (this.getValue().isNull() || right.getValue().isNull())
-            return new ResultList(ValueNull.getInstance());
+            return new ResultSingle(ValueNull.getInstance());
         ArrayList<Value> newList = new ArrayList<Value>();
         for (Value v : getList())
             newList.add(operation.perform(v, right.getValue()));
@@ -31,12 +31,18 @@ public class ResultList extends Result {
 
     @Override
     protected Result binaryOperationTyped(Result.BinaryOperation operation, ResultList right) {
-        return new ResultList(operation.perform(value, right.value));
+        throw new UnsupportedOperationException("Binary operations not supported on (ResultList, ResultList).");
     }
 
     @Override
     public Result unaryOperation(UnaryOperation operation) {
-        return new ResultSingle(operation.perform(value));
+        if (this.getValue().isNull())
+            return new ResultList(ValueNull.getInstance());
+        ArrayList<Value> newList = new ArrayList<>();
+        for (Value v : getList())
+            newList.add(operation.perform(v));
+        Type type = (newList.isEmpty() ? ((TypeCollection)value.getType()).getElementType() : newList.get(0).getType());
+        return new ResultList(new ValueList(newList, type));
     }
 
     @Override
@@ -77,22 +83,25 @@ public class ResultList extends Result {
 
     @Override
     public Result first(int size) {
-        return new ResultList(firstList(getList(), size));
+        return new ResultSingle(firstList(getList(), size));
     }
 
     @Override
     public Result last(int size) {
-        return new ResultList(lastList(getList(), size));
+        return new ResultSingle(lastList(getList(), size));
     }
 
     @Override
     public Result random(int size) {
-        return new ResultList(randomList(getList(), size));
+        return new ResultSingle(randomList(getList(), size));
     }
 
     @Override
     public Result convertTo(Type to) {
-        return new ResultList(value.convertTo(to));
+        ValueList list = new ValueList(new ArrayList<>(), to);
+        for (Value v: getList())
+            list.add(v.convertTo(to));
+        return new ResultList(list);
     }
 
     @Override

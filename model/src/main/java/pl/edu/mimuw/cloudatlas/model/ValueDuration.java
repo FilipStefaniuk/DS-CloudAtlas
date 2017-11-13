@@ -177,12 +177,14 @@ public class ValueDuration extends ValueSimple<Long> {
 	
 	@Override
 	public Value divide(Value value) {
-		sameTypesOrThrow(value, Operation.DIVIDE);
-		if (isNull() || value.isNull())
-			return new ValueDuration((Long) null);
-		if(((ValueDuration)value).getValue() == 0L)
-			throw new ArithmeticException("Division by zero.");
-		return new ValueDuration(getValue() / ((ValueDuration) value).getValue());
+		if (value.getType().isCompatible(TypePrimitive.INTEGER)) {
+			if (isNull() || value.isNull())
+				return new ValueDuration((Long) null);
+			if(((ValueInt)value).getValue() == 0L)
+				throw new ArithmeticException("Division by zero.");
+			return new ValueDuration(getValue() / ((ValueInt) value).getValue());
+		}
+		throw new IncompatibleTypesException(getType(), value.getType(), Operation.DIVIDE);
 	}
 	
 	@Override

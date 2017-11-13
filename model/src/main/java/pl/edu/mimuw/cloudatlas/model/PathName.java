@@ -41,7 +41,7 @@ public class PathName {
 	
 	private final List<String> components;
 	private final String name;
-	
+
 	/**
 	 * Creates a <code>PathName</code> object representing the specified path. For the root zone, there are three
 	 * accepted forms: <code>null</code> reference, empty string or slash. Any other zone is represented by a string
@@ -102,7 +102,7 @@ public class PathName {
 	public String getName() {
 		return name;
 	}
-	
+
 	/**
 	 * Gets a name one level up in a hierarchy. For the root zone, this method returns a new instance of the same zone.
 	 * 

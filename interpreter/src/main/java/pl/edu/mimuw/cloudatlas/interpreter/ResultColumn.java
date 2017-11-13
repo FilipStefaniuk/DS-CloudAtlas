@@ -15,7 +15,7 @@ public class ResultColumn extends Result{
     @Override
     protected Result binaryOperationTyped(Result.BinaryOperation operation, ResultSingle right) {
         if (this.getValue().isNull() || right.getValue().isNull())
-            return new ResultColumn(ValueNull.getInstance());
+            return new ResultSingle(ValueNull.getInstance());
 
         ArrayList<Value> newList = new ArrayList<>();
         for (Value v : getColumn())
@@ -26,7 +26,21 @@ public class ResultColumn extends Result{
 
     @Override
     protected Result binaryOperationTyped(Result.BinaryOperation operation, ResultColumn right) {
-        return new ResultColumn(operation.perform(value, right.value));
+        if (this.getValue().isNull() || right.getValue().isNull())
+            return new ResultSingle(ValueNull.getInstance());
+
+        ArrayList<Value> newList = new ArrayList<>();
+        ValueList other = right.getColumn();
+
+        if (getColumn().size() != right.getColumn().size())
+            throw new IllegalArgumentException("Columns have different sizes");
+
+        for (int i = 0 ; i < getColumn().size(); i ++)
+            newList.add(operation.perform(getColumn().get(i), other.get(i)));
+
+        Type t = (newList.isEmpty() ? ((TypeCollection)value.getType()).getElementType() : newList.get(0).getType());
+        return new ResultColumn(new ValueList(newList, t));
+
     }
 
     @Override
@@ -36,7 +50,14 @@ public class ResultColumn extends Result{
 
     @Override
     public Result unaryOperation(UnaryOperation operation) {
-        return new ResultSingle(operation.perform(value));
+        if (this.getValue().isNull())
+            return new ResultColumn(ValueNull.getInstance());
+
+        ArrayList<Value> newList = new ArrayList<>();
+        for (Value v : getColumn())
+            newList.add(operation.perform(v));
+        Type type = (newList.isEmpty() ? ((TypeCollection)value.getType()).getElementType() : newList.get(0).getType());
+        return new ResultColumn(new ValueList(newList, type));
     }
 
     @Override
@@ -76,22 +97,25 @@ public class ResultColumn extends Result{
 
     @Override
     public Result first(int size) {
-        return new ResultColumn(firstList(getColumn(), size));
+        return new ResultSingle(firstList(getColumn(), size));
     }
 
     @Override
     public Result last(int size) {
-        return new ResultColumn(lastList(getColumn(), size));
+        return new ResultSingle(lastList(getColumn(), size));
     }
 
     @Override
     public Result random(int size) {
-        return new ResultColumn(randomList(getColumn(), size));
+        return new ResultSingle(randomList(getColumn(), size));
     }
 
     @Override
     public ResultColumn convertTo(Type to) {
-        return new ResultColumn(value.convertTo(to));
+        ValueList list = new ValueList(new ArrayList<>(), to);
+        for (Value v: getColumn())
+            list.add(v.convertTo(to));
+        return new ResultColumn(list);
     }
 
     @Override

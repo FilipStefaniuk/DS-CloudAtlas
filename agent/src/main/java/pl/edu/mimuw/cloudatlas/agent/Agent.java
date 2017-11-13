@@ -1,38 +1,58 @@
 package pl.edu.mimuw.cloudatlas.agent;
 
-import pl.edu.mimuw.cloudatlas.model.*;
+//import pl.edu.mimuw.cloudatlas.interpreter.InterpreterMain;
+//import pl.edu.mimuw.cloudatlas.model.*;
+//
+//import java.rmi.RemoteException;
+//import java.util.ArrayList;
+//import java.util.Collections;
+//import java.util.Iterator;
+//import java.util.List;
 
-import java.rmi.RemoteException;
+public class Agent implements AgentInterface{
 
-public class Agent implements AgentInterface {
+//    private ZMI root;
 
-    private ZMI root;
+    private int value;
 
-    public Agent(String name) {
-        PathName pathName = new PathName(name);
-        ZMI zmi = null;
-        for (String component : pathName.getComponents()) {
-            ZMI new_zmi = createInitialZMI(zmi, component);
-            if (zmi == null) {
-                root = new_zmi;
-            }
-            zmi = new_zmi;
-        }
+    public Agent() throws Exception {
+//        root = InterpreterMain.createDefaultInterpreterHierarchy();
+        this.value = 0;
     }
 
-    private ZMI createInitialZMI(ZMI parent, String name) {
-        ZMI zmi = parent != null ? new ZMI(parent) : new ZMI();
-        zmi.getAttributes().add("name", new ValueString(name));
-        return zmi;
+//    ZMI getZMIByPathName(PathName pathName) throws Exception{
+//
+//        ZMI result = root;
+//        Boolean isNew = false;
+//
+//        for(String name : pathName.getComponents()) {
+//            for(ZMI son : result.getSons()) {
+//                if (((ValueString) son.getAttributes().get("name")).getValue().equals(name)) {
+//                    result = son;
+//                    isNew = true;
+//                    break;
+//                }
+//            }
+//
+//            if(!isNew)
+//                throw new Exception();
+//
+//            isNew = false;
+//
+//        }
+//        return result;
+//    }
+
+//    public AttributesMap getAttributesOfZone(PathName pathName) throws Exception{
+//        return getZMIByPathName(pathName).getAttributes();
+//    }
+
+    public void setValue(int value) {
+        System.out.println(value);
+        this.value = value;
     }
 
-    @Override
-    public void setValue(PathName name, Attribute attribute, Value value) throws RemoteException {
-
-    }
-
-    @Override
-    public AttributesMap getValues(PathName name) throws RemoteException {
-        return null;
+    public int getValue() {
+        return this.value;
     }
 }

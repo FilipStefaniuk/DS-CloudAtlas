@@ -44,7 +44,7 @@ class ResultSingle extends Result {
 	@Override
 	protected Result binaryOperationTyped(BinaryOperation operation, ResultColumn right) {
 		if (this.getValue().isNull() || right.getValue().isNull())
-			return new ResultColumn(ValueNull.getInstance());
+			return new ResultSingle(ValueNull.getInstance());
 
 		ArrayList<Value> newList = new ArrayList<>();
 		for (Value value : right.getColumn())
@@ -57,10 +57,10 @@ class ResultSingle extends Result {
 	@Override
 	protected Result binaryOperationTyped(BinaryOperation operation, ResultList right) {
 		if (this.getValue().isNull() || right.getValue().isNull())
-			return new ResultList(ValueNull.getInstance());
+			return new ResultSingle(ValueNull.getInstance());
 
 		ArrayList<Value> newList = new ArrayList<>();
-		for (Value value : right.getColumn())
+		for (Value value : right.getList())
 			newList.add(operation.perform(this.value, value));
 
 		Type t = (newList.isEmpty()) ? this.value.getType() : newList.get(0).getType();

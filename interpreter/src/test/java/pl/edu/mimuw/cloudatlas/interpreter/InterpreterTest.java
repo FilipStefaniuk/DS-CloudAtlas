@@ -1,7 +1,5 @@
 package pl.edu.mimuw.cloudatlas.interpreter;
 
-import java.io.ByteArrayInputStream;
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.ParseException;
 import java.util.*;
@@ -9,9 +7,6 @@ import java.util.*;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import pl.edu.mimuw.cloudatlas.interpreter.query.Yylex;
-import pl.edu.mimuw.cloudatlas.interpreter.query.parser;
-import pl.edu.mimuw.cloudatlas.model.PathName;
 import pl.edu.mimuw.cloudatlas.model.TypePrimitive;
 import pl.edu.mimuw.cloudatlas.model.Value;
 import pl.edu.mimuw.cloudatlas.model.ValueBoolean;
@@ -28,52 +23,13 @@ import pl.edu.mimuw.cloudatlas.model.ZMI;
 public class InterpreterTest {
 	private ZMI root;
 
-	private static PathName getPathName(ZMI zmi) {
-		String name = ((ValueString)zmi.getAttributes().get("name")).getValue();
-		return zmi.getFather() == null? PathName.ROOT : getPathName(zmi.getFather()).levelDown(name);
-	}
-	
-	private String executeQueries(ZMI zmi, String query) throws Exception {
-		StringJoiner stringJoiner = new StringJoiner("\n");
-
-		if(zmi.getSons().isEmpty())
-			return "";
-
-		for(ZMI son : zmi.getSons()) {
-			String r = executeQueries(son, query);
-			if (r != "")
-				stringJoiner.add(r);
-		}
-		try {
-			Interpreter interpreter = new Interpreter(zmi);
-			Yylex lex = new Yylex(new ByteArrayInputStream(query.getBytes()));
-			List<QueryResult> result = interpreter.interpretProgram((new parser(lex)).pProgram());
-
-			PathName zone = getPathName(zmi);
-			for (QueryResult r : result) {
-				stringJoiner.add(zone + ": " + r);
-				zmi.getAttributes().addOrChange(r.getName(), r.getValue());
-			}
-		}catch (InterpreterException exception) {
-			return stringJoiner.toString();
-		}
-		return stringJoiner.toString();
-	}
-	
-	private static ValueContact createContact(String path, byte ip1, byte ip2, byte ip3, byte ip4)
-			throws UnknownHostException {
-		return new ValueContact(new PathName(path), InetAddress.getByAddress(new byte[] {
-			ip1, ip2, ip3, ip4
-		}));
-	}
-
 	@Before
 	public void createTestHierarchy() throws ParseException, UnknownHostException {
-		ValueContact violet07Contact = createContact("/uw/violet07", (byte)10, (byte)1, (byte)1, (byte)10);
-		ValueContact khaki13Contact = createContact("/uw/khaki13", (byte)10, (byte)1, (byte)1, (byte)38);
-		ValueContact khaki31Contact = createContact("/uw/khaki31", (byte)10, (byte)1, (byte)1, (byte)39);
-		ValueContact whatever01Contact = createContact("/uw/whatever01", (byte)82, (byte)111, (byte)52, (byte)56);
-		ValueContact whatever02Contact = createContact("/uw/whatever02", (byte)82, (byte)111, (byte)52, (byte)57);
+		ValueContact violet07Contact = InterpreterMain.createContact("/uw/violet07", (byte)10, (byte)1, (byte)1, (byte)10);
+		ValueContact khaki13Contact = InterpreterMain.createContact("/uw/khaki13", (byte)10, (byte)1, (byte)1, (byte)38);
+		ValueContact khaki31Contact = InterpreterMain.createContact("/uw/khaki31", (byte)10, (byte)1, (byte)1, (byte)39);
+		ValueContact whatever01Contact = InterpreterMain.createContact("/uw/whatever01", (byte)82, (byte)111, (byte)52, (byte)56);
+		ValueContact whatever02Contact = InterpreterMain.createContact("/uw/whatever02", (byte)82, (byte)111, (byte)52, (byte)57);
 		
 		List<Value> list;
 		
@@ -223,7 +179,7 @@ public class InterpreterTest {
 
 	@Test
 	public void query1Test() throws Exception {
-		String result = executeQueries(root, "SELECT 2 + 2 AS two_plus_two");
+		String result = InterpreterMain.executeQueries(root, "SELECT 2 + 2 AS two_plus_two");
 		Assert.assertEquals("/uw: two_plus_two: 4\n/pjwstk: two_plus_two: 4\n/: two_plus_two: 4", result);
 
 		System.out.print(result);
@@ -231,126 +187,126 @@ public class InterpreterTest {
 
 	@Test
 	public void  query2Test() throws  Exception {
-		String result = executeQueries(root, "SELECT to_integer((to_double(3) - 5.6) / 11.0 + to_double(47 * (31 - 15))) AS math WHERE true");
+		String result = InterpreterMain.executeQueries(root, "SELECT to_integer((to_double(3) - 5.6) / 11.0 + to_double(47 * (31 - 15))) AS math WHERE true");
 		Assert.assertEquals("/uw: math: 751\n/pjwstk: math: 751\n/: math: 751", result);
 		System.out.print(result);
 	}
 
 	@Test
 	public void query3Test() throws Exception {
-		String result = executeQueries(root, "SELECT count(members) AS members_count");
+		String result = InterpreterMain.executeQueries(root, "SELECT count(members) AS members_count");
 		Assert.assertEquals("/uw: members_count: 3\n/pjwstk: members_count: 2", result);
 		System.out.print(result);
 	}
 
 	@Test
 	public void query4Test() throws Exception {
-		String result = executeQueries(root, "SELECT first(99, name) AS new_contacts ORDER BY cpu_usage DESC NULLS LAST, num_cores ASC NULLS FIRST");
+		String result = InterpreterMain.executeQueries(root, "SELECT first(99, name) AS new_contacts ORDER BY cpu_usage DESC NULLS LAST, num_cores ASC NULLS FIRST");
 		Assert.assertEquals("/uw: new_contacts: [khaki13, violet07, khaki31]\n/pjwstk: new_contacts: [whatever01, whatever02]\n/: new_contacts: [uw, pjwstk]", result);
 		System.out.print(result);
 	}
 
 	@Test
 	public void query5Test() throws Exception {
-		String result = executeQueries(root, "SELECT count(num_cores - size(some_names)) AS sth");
-		Assert.assertEquals("/uw: sth: 2\n", result);
+		String result = InterpreterMain.executeQueries(root, "SELECT count(num_cores - size(some_names)) AS sth");
+		Assert.assertEquals("/uw: sth: 2", result);
 		System.out.print(result);
 	}
 
 	@Test
 	public void query6Test() throws Exception {
-		String result = executeQueries(root, "SELECT min(sum(distinct(2 * level)) + 38 * size(contacts)) AS sth WHERE num_cores < 8");
-		Assert.assertEquals("/uw: sth: 80\n/pjwstk: sth: 80\n/: sth: NULL", result);
+		String result = InterpreterMain.executeQueries(root, "SELECT min(sum(distinct(2 * level)) + 38 * size(contacts)) AS sth WHERE num_cores < 8");
+		Assert.assertEquals("/uw: sth: 80\n/pjwstk: sth: 80", result);
 		System.out.print(result);
 	}
 
 	@Test
 	public void query7Test() throws Exception {
-		String result = executeQueries(root, "SELECT first(1, name) + last(1,name) AS concat_name WHERE num_cores >= (SELECT min(num_cores) ORDER BY timestamp) ORDER BY creation ASC NULLS LAST");
+		String result = InterpreterMain.executeQueries(root, "SELECT first(1, name) + last(1,name) AS concat_name WHERE num_cores >= (SELECT min(num_cores) ORDER BY timestamp) ORDER BY creation ASC NULLS LAST");
 		Assert.assertEquals("/uw: concat_name: [violet07, khaki31]\n/pjwstk: concat_name: [whatever01, whatever02]", result);
 		System.out.print(result);
 	}
 
 	@Test
 	public void query8Test() throws Exception {
-		String result = executeQueries(root, "SELECT sum(cardinality) AS cardinality");
+		String result = InterpreterMain.executeQueries(root, "SELECT sum(cardinality) AS cardinality");
 		Assert.assertEquals("/uw: cardinality: 3\n/pjwstk: cardinality: 2\n/: cardinality: 5", result);
 		System.out.print(result);
 	}
 
 	@Test
 	public void query9Test() throws Exception {
-		String result = executeQueries(root, "SELECT land(cpu_usage < 0.5) AS cpu_ok");
+		String result = InterpreterMain.executeQueries(root, "SELECT land(cpu_usage < 0.5) AS cpu_ok");
 		Assert.assertEquals("/uw: cpu_ok: false\n/pjwstk: cpu_ok: true", result);
 		System.out.print(result);
 	}
 
 	@Test
 	public void query10Test() throws Exception {
-		String result = executeQueries(root, "SELECT min(name) AS min_name, to_string(first(1, name)) AS max_name ORDER BY name DESC");
+		String result = InterpreterMain.executeQueries(root, "SELECT min(name) AS min_name, to_string(first(1, name)) AS max_name ORDER BY name DESC");
 		Assert.assertEquals("/uw: min_name: khaki13\n/uw: max_name: [violet07]\n/pjwstk: min_name: whatever01\n/pjwstk: max_name: [whatever02]\n/: min_name: pjwstk\n/: max_name: [uw]", result);
 		System.out.print(result);
 	}
 
 	@Test
 	public void query11Test() throws Exception {
-		String result = executeQueries(root, "SELECT epoch() AS epoch, land(timestamp > epoch()) AS afterY2K");
+		String result = InterpreterMain.executeQueries(root, "SELECT epoch() AS epoch, land(timestamp > epoch()) AS afterY2K");
 		Assert.assertEquals("/uw: epoch: 2000/01/01 00:00:00.000\n/uw: afterY2K: true\n/pjwstk: epoch: 2000/01/01 00:00:00.000\n/pjwstk: afterY2K: true\n/: epoch: 2000/01/01 00:00:00.000\n/: afterY2K: true", result);
 		System.out.print(result);
 	}
 
 	@Test
 	public void query12Test() throws Exception {
-		String result = executeQueries(root, "SELECT min(timestamp) + (max(timestamp) - epoch()) / 2 AS t2");
+		String result = InterpreterMain.executeQueries(root, "SELECT min(timestamp) + (max(timestamp) - epoch()) / 2 AS t2");
 		Assert.assertEquals("/uw: t2: 2019/04/16 05:31:30.000\n/pjwstk: t2: 2019/04/16 08:48:30.000\n/: t2: 2019/04/16 07:12:19.684", result);
 		System.out.print(result);
 	}
 
 	@Test
 	public void query13Test() throws Exception {
-		String result = executeQueries(root, "SELECT lor(unfold(some_names) + \"xx\" REGEXP \"([a-z]*)atkax([a-z]*)\") AS beatka");
+		String result = InterpreterMain.executeQueries(root, "SELECT lor(unfold(some_names) + \"xx\" REGEXP \"([a-z]*)atkax([a-z]*)\") AS beatka");
 		Assert.assertEquals("/uw: beatka: true", result);
 		System.out.print(result);
 	}
 
 	@Test
 	public void query14Test() throws Exception {
-		String result = executeQueries(root, "SELECT (SELECT avg(cpu_usage) WHERE false) AS smth");
+		String result = InterpreterMain.executeQueries(root, "SELECT (SELECT avg(cpu_usage) WHERE false) AS smth");
 		Assert.assertEquals("/uw: smth: NULL\n/pjwstk: smth: NULL", result);
 		System.out.print(result);
 	}
 
 	@Test
 	public void query15Test() throws Exception {
-		String result = executeQueries(root, "SELECT avg(cpu_usage) AS cpu_usage WHERE (SELECT sum(cardinality)) > (SELECT to_integer((1 + 2 + 3 + 4) / 5))");
+		String result = InterpreterMain.executeQueries(root, "SELECT avg(cpu_usage) AS cpu_usage WHERE (SELECT sum(cardinality)) > (SELECT to_integer((1 + 2 + 3 + 4) / 5))");
 		Assert.assertEquals("/uw: cpu_usage: 0.5\n/pjwstk: cpu_usage: NULL\n/: cpu_usage: NULL", result);
 		System.out.print(result);
 	}
 
 	@Test
 	public void query16Test() throws Exception {
-		String result = executeQueries(root, "SELECT ceil(to_double(min(num_cores)) / 1.41) AS sth");
+		String result = InterpreterMain.executeQueries(root, "SELECT ceil(to_double(min(num_cores)) / 1.41) AS sth");
 		Assert.assertEquals("/uw: sth: 3.0\n/pjwstk: sth: 5.0", result);
 		System.out.print(result);
 	}
 
 	@Test
 	public void query17Test() throws Exception {
-		String result = executeQueries(root, "SELECT floor(5.0 / 1.9) AS fl");
+		String result = InterpreterMain.executeQueries(root, "SELECT floor(5.0 / 1.9) AS fl");
 		Assert.assertEquals("/uw: fl: 2.0\n/pjwstk: fl: 2.0\n/: fl: 2.0", result);
 		System.out.print(result);
 	}
 
 	@Test
 	public void query18Test() throws Exception {
-		String result = executeQueries(root, "SELECT to_time(\"2013/07/05 12:54:32.098\") + to_duration(6811) AS tim");
+		String result = InterpreterMain.executeQueries(root, "SELECT to_time(\"2013/07/05 12:54:32.098\") + to_duration(6811) AS tim");
 		Assert.assertEquals("/uw: tim: 2013/07/05 12:54:38.909\n/pjwstk: tim: 2013/07/05 12:54:38.909\n/: tim: 2013/07/05 12:54:38.909", result);
 		System.out.print(result);
 	}
 
 	@Test
 	public void query19Test() throws Exception {
-		String result = executeQueries(root, "SELECT avg(cpu_usage * to_double(num_cores)) AS cpu_load, sum(num_cores) AS num_cores");
+		String result = InterpreterMain.executeQueries(root, "SELECT avg(cpu_usage * to_double(num_cores)) AS cpu_load, sum(num_cores) AS num_cores");
 		Assert.assertEquals("/uw: cpu_load: 2.7\n/uw: num_cores: 6\n/pjwstk: cpu_load: 2.95\n/pjwstk: num_cores: 20", result);
 		System.out.print(result);
 	}
