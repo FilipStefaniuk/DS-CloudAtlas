@@ -1,0 +1,10 @@
+<html>
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="static/js/test.js"></script>
+</head>
+<body>
+<h2>Time:</h2>
+<h3 id="time"></h3>
+</body>
+</html>
