@@ -95,9 +95,9 @@ public class Table implements Iterable<TableRow> {
 	}
 
 	public ValueList getColumn(String column) {
-		if(column.startsWith("&")) {
-			throw new NoSuchAttributeException(column);
-		}
+//		if(column.startsWith("&")) {
+//			throw new NoSuchAttributeException(column);
+//		}
 		try {
 			int position = headersMap.get(column);
 			List<Value> result = new ArrayList<Value>();

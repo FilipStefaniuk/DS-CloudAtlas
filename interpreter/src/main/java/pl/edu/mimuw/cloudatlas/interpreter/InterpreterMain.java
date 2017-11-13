@@ -22,26 +22,38 @@ public class InterpreterMain {
                 String[] inputQuery = scanner.next().split(":");
                 if (inputQuery.length != 2)
                     throw new Exception();
-                new Attribute(inputQuery[0].trim());
-                System.out.println(executeQueries(root, inputQuery[1]));
+                Attribute queryName = new Attribute(inputQuery[0].trim());
+
+                root.installQuery(queryName, new ValueString(inputQuery[1]));
+                System.out.println(executeQueries(root));
+                root.uninstallQuery(queryName);
+
             } catch (Exception e) {
                 System.err.println("BAD INPUT");
             }
         }
     }
 
-    public static String executeQueries(ZMI zmi, String query) throws Exception {
+    public static String executeQueries(ZMI zmi) throws Exception {
         StringJoiner stringJoiner = new StringJoiner("\n");
 
         if(zmi.getSons().isEmpty())
             return "";
 
         for(ZMI son : zmi.getSons()) {
-            String r = executeQueries(son, query);
+            String r = executeQueries(son);
             if (!r.isEmpty())
                 stringJoiner.add(r);
         }
         try {
+            StringJoiner queryJoiner = new StringJoiner(";");
+            for(Map.Entry<Attribute, Value> entry : zmi.getAttributes())
+                if(entry.getKey().getName().startsWith("&"))
+                    queryJoiner.add(((ValueString) entry.getValue()).getValue());
+
+            String query = queryJoiner.toString();
+            if (query.isEmpty())
+                return "";
             Interpreter interpreter = new Interpreter(zmi);
             Yylex lex = new Yylex(new ByteArrayInputStream(query.getBytes()));
             List<QueryResult> result = interpreter.interpretProgram((new parser(lex)).pProgram());
@@ -57,7 +69,7 @@ public class InterpreterMain {
         return stringJoiner.toString();
     }
 
-    private static PathName getPathName(ZMI zmi) {
+    public static PathName getPathName(ZMI zmi) {
         String name = ((ValueString)zmi.getAttributes().get("name")).getValue();
         return zmi.getFather() == null? PathName.ROOT : getPathName(zmi.getFather()).levelDown(name);
     }
