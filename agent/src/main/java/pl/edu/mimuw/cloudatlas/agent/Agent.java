@@ -83,7 +83,7 @@ public class Agent implements AgentInterface {
 
 
     @Override
-    public void uninstallQuery(Attribute attribute, ValueString value) throws RemoteException {
+    public void uninstallQuery(Attribute attribute) throws RemoteException {
         root.uninstallQuery(attribute);
     }
 

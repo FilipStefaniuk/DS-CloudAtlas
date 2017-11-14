@@ -8,9 +8,9 @@
 #
 
 
-#rmiregistry -J-classpath -J"path\to\jasperreports-3.7.5.jar"
+rmiregistry -J-classpath -J"/home/filip/Documents/cloudatlas/agent/target/agent-1.0-SNAPSHOT-jar-with-dependencies.jar" &
 
 
 #cd agent/target/classes/
-rmiregistry &
+#rmiregistry &
 

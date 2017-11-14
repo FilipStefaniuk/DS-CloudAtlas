@@ -1,4 +1,4 @@
-package pl.edu.mimuw.cloudatlas.client;
-
-public class SetFallbackContactsServlet {
-}
+//package pl.edu.mimuw.cloudatlas.client;
+//
+//public class SetFallbackContactsServlet {
+//}
