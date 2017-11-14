@@ -6,8 +6,12 @@ import pl.edu.mimuw.cloudatlas.model.ValueDouble;
 import pl.edu.mimuw.cloudatlas.model.ValueInt;
 import pl.edu.mimuw.cloudatlas.model.ValueString;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
+import java.util.ArrayList;
+import java.util.List;
 
 
 //TODO missing attributes
@@ -44,11 +48,11 @@ public class SystemInfo {
         attributes.addOrChange(TOTAL_RAM, new ValueInt(osMXBean.getTotalPhysicalMemorySize()));
         attributes.addOrChange(FREE_SWAP, new ValueInt(osMXBean.getFreeSwapSpaceSize()));
         attributes.addOrChange(TOTAL_SWAP, new ValueInt(osMXBean.getTotalSwapSpaceSize()));
-//        attributes.addOrChange(NUM_PROCESSES, new ValueInt());
+        attributes.addOrChange(NUM_PROCESSES, new ValueInt((long)execCommand("ps aux").size()));
         attributes.addOrChange(CORES, new ValueInt((long) osMXBean.getAvailableProcessors()));
         attributes.addOrChange(KERNEL_VER, new ValueString(osMXBean.getVersion()));
-//        attributes.addOrChange(LOGGED_USERS, new ValueInt());
-//        attributes.addOrChange(DNS_NAMES, new ValueInt());
+        attributes.addOrChange(LOGGED_USERS, new ValueInt((long)execCommand("users").size()));
+        attributes.addOrChange(DNS_NAMES, new ValueInt((long) execCommand("hostname").size()));
     }
 
     private Long getTotalDisk() {
@@ -66,6 +70,22 @@ public class SystemInfo {
         for(File root : roots) {
             result += root.getFreeSpace();
         }
+        return result;
+    }
+
+    List<String> execCommand(String command) {
+        List<String> result = new ArrayList<>();
+
+        Process p;
+        try {
+            p = Runtime.getRuntime().exec(command);
+            p.waitFor();
+            BufferedReader reader = new BufferedReader(new InputStreamReader((p.getInputStream())));
+            String line;
+            while((line = reader.readLine()) != null) {
+                result.add(line);
+            }
+        } catch (Exception e) {}
         return result;
     }
 

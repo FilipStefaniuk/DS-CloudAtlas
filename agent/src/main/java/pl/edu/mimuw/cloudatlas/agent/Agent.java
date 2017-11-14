@@ -77,7 +77,6 @@ public class Agent implements AgentInterface {
 
     @Override
     public void installQuery(Attribute attribute, ValueString value) throws RemoteException {
-        System.out.print("installing query: " + attribute + " : " + value);
         root.installQuery(attribute, value);
     }
 

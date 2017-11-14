@@ -17,7 +17,7 @@ function uninstallQuery(name) {
 $(document).ready(function() {
     var onchart = null;
     var series = new TimeSeries();
-    var smoothie = new SmoothieChart({responsive:true,grid:{fillStyle:'#eee'}, labels:{fillStyle:'#000000'}});
+    var smoothie = new SmoothieChart({maxValueScale:1.3,minValueScale:1.3,responsive:true,grid:{fillStyle:'#eee'}, labels:{fillStyle:'#000000'}});
     smoothie.addTimeSeries(series, {lineWidth:2, strokeStyle:'#333'});
     smoothie.streamTo(document.getElementById("chart-canvas"), 1000);
 
