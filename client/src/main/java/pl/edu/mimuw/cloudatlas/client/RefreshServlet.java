@@ -1,5 +1,7 @@
 package pl.edu.mimuw.cloudatlas.client;
 
+import com.google.gson.Gson;
+
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -7,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
@@ -22,7 +25,6 @@ public class RefreshServlet extends HttpServlet{
         // Set response content type
         response.setContentType("text/plain");
         response.setCharacterEncoding("UTF-8");
-
         // Get current time
         Calendar calendar = new GregorianCalendar();
         String am_pm;
@@ -37,8 +39,8 @@ public class RefreshServlet extends HttpServlet{
 
 
 //        String CT = hour+":"+ minute +":"+ second +" "+ am_pm;
-//        String CT = new Gson
-//        response.getWriter().write(CT);
+        String CT = new Gson().toJson(Arrays.asList(hour, minute, second));
+        response.getWriter().write(CT);
 
         //
 //        PrintWriter out = response.getWriter();
