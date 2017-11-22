@@ -27,7 +27,7 @@ public class InstallQueryServlet extends HttpServlet {
             throw new ServletException();
 
         try {
-            Registry registry = LocateRegistry.getRegistry("localhost");
+            Registry registry = LocateRegistry.getRegistry("localhost", 1324);
             AgentInterface stub = (AgentInterface) registry.lookup("Agent");
             stub.installQuery(new Attribute('&' + name), new ValueString(value));
 

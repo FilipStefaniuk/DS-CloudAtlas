@@ -25,7 +25,7 @@ public class UninstallQueryServlet extends HttpServlet{
             throw new ServletException();
 
         try {
-            Registry registry = LocateRegistry.getRegistry("localhost");
+            Registry registry = LocateRegistry.getRegistry("localhost", 1324);
             AgentInterface stub = (AgentInterface) registry.lookup("Agent");
             stub.uninstallQuery(new Attribute('&' + name));
 

@@ -5,6 +5,9 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
 public class AgentServer {
+
+    private static final int REGISTRY_PORT = 1324;
+
     public static void main(String[] args) throws Exception{
 
         if (System.getSecurityManager() == null) {
@@ -14,9 +17,9 @@ public class AgentServer {
         try {
             Agent object = new Agent();
             AgentInterface stub = (AgentInterface) UnicastRemoteObject.exportObject(object, 0);
-            Registry registry = LocateRegistry.getRegistry();
+            Registry registry = LocateRegistry.getRegistry(REGISTRY_PORT);
             registry.rebind("Agent", stub);
-            System.out.println("Agent bound");
+//            System.out.println("Agent bound");
 
             while(true) {
                 object.update();

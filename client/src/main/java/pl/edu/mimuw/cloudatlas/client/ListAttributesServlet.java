@@ -31,7 +31,7 @@ public class ListAttributesServlet extends HttpServlet {
             throw new ServletException();
 
         try {
-            Registry registry = LocateRegistry.getRegistry("localhost");
+            Registry registry = LocateRegistry.getRegistry("localhost", 1324);
             AgentInterface stub = (AgentInterface) registry.lookup("Agent");
             AttributesMap attributes = stub.getAttributes(new PathName(name));
 
