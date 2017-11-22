@@ -6,16 +6,16 @@ import java.util.ArrayList;
 
 public class ResultList extends Result {
 
-    private final Value value;
+    private final ValueList value;
 
-    public ResultList(Value value) {
+    public ResultList(ValueList value) {
         this.value = value;
     }
 
     @Override
     protected Result binaryOperationTyped(Result.BinaryOperation operation, ResultSingle right) {
         if (this.getValue().isNull() || right.getValue().isNull())
-            return new ResultSingle(ValueNull.getInstance());
+            return new ResultList(new ValueList(null, ((TypeCollection)this.getType()).getElementType()));
         ArrayList<Value> newList = new ArrayList<Value>();
         for (Value v : getList())
             newList.add(operation.perform(v, right.getValue()));
@@ -37,7 +37,7 @@ public class ResultList extends Result {
     @Override
     public Result unaryOperation(UnaryOperation operation) {
         if (this.getValue().isNull())
-            return new ResultList(ValueNull.getInstance());
+            return new ResultList(new ValueList(null, ((TypeCollection)this.getType()).getElementType()));
         ArrayList<Value> newList = new ArrayList<>();
         for (Value v : getList())
             newList.add(operation.perform(v));
@@ -68,7 +68,7 @@ public class ResultList extends Result {
 
     @Override
     public ValueList getList() {
-        return (ValueList) value;
+        return value;
     }
 
     @Override

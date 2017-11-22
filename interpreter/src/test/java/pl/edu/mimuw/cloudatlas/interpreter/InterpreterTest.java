@@ -178,8 +178,8 @@ public class InterpreterTest {
 	@Test
 	public void query1Test() throws Exception {
 		ValueString query = new ValueString("SELECT 2 + 2 AS two_plus_two");
-		root.installQuery(attribute, query);
-		String result = InterpreterMain.executeQueries(root);
+		InterpreterMain.installQuery(root, attribute, query);
+		String result = InterpreterMain.execute(root);
 		Assert.assertEquals("/uw: two_plus_two: 4\n/pjwstk: two_plus_two: 4\n/: two_plus_two: 4", result);
 
 //		System.out.print(result);
@@ -188,8 +188,8 @@ public class InterpreterTest {
 	@Test
 	public void  query2Test() throws  Exception {
 		ValueString query = new ValueString("SELECT to_integer((to_double(3) - 5.6) / 11.0 + to_double(47 * (31 - 15))) AS math WHERE true");
-		root.installQuery(attribute, query);
-		String result = InterpreterMain.executeQueries(root);
+		InterpreterMain.installQuery(root, attribute, query);
+		String result = InterpreterMain.execute(root);
 		Assert.assertEquals("/uw: math: 751\n/pjwstk: math: 751\n/: math: 751", result);
 
 //		System.out.print(result);
@@ -198,8 +198,8 @@ public class InterpreterTest {
 	@Test
 	public void query3Test() throws Exception {
 		ValueString query = new ValueString("SELECT count(members) AS members_count");
-		root.installQuery(attribute, query);
-		String result = InterpreterMain.executeQueries(root);
+		InterpreterMain.installQuery(root, attribute, query);
+		String result = InterpreterMain.execute(root);
 		Assert.assertEquals("/uw: members_count: 3\n/pjwstk: members_count: 2", result);
 
 //		System.out.print(result);
@@ -208,8 +208,8 @@ public class InterpreterTest {
 	@Test
 	public void query4Test() throws Exception {
 		ValueString query = new ValueString("SELECT first(99, name) AS new_contacts ORDER BY cpu_usage DESC NULLS LAST, num_cores ASC NULLS FIRST");
-		root.installQuery(attribute, query);
-		String result = InterpreterMain.executeQueries(root);
+		InterpreterMain.installQuery(root, attribute, query);
+		String result = InterpreterMain.execute(root);
 		Assert.assertEquals("/uw: new_contacts: [khaki13, violet07, khaki31]\n/pjwstk: new_contacts: [whatever01, whatever02]\n/: new_contacts: [uw, pjwstk]", result);
 
 //		System.out.print(result);
@@ -218,8 +218,8 @@ public class InterpreterTest {
 	@Test
 	public void query5Test() throws Exception {
 		ValueString query = new ValueString("SELECT count(num_cores - size(some_names)) AS sth");
-		root.installQuery(attribute, query);
-		String result = InterpreterMain.executeQueries(root);
+		InterpreterMain.installQuery(root, attribute, query);
+		String result = InterpreterMain.execute(root);
 		Assert.assertEquals("/uw: sth: 2", result);
 
 //		System.out.print(result);
@@ -228,10 +228,10 @@ public class InterpreterTest {
 	@Test
 	public void query6Test() throws Exception {
 		ValueString query = new ValueString("SELECT min(sum(distinct(2 * level)) + 38 * size(contacts)) AS sth WHERE num_cores < 8");
-		root.installQuery(attribute, query);
+		InterpreterMain.installQuery(root, attribute, query);
 
-		String result = InterpreterMain.executeQueries(root);
-		Assert.assertEquals("/uw: sth: 80\n/pjwstk: sth: 80", result);
+		String result = InterpreterMain.execute(root);
+		Assert.assertEquals("/uw: sth: 80\n/pjwstk: sth: 80\n/: sth: NULL", result);
 
 //		System.out.print(result);
 	}
@@ -239,8 +239,8 @@ public class InterpreterTest {
 	@Test
 	public void query7Test() throws Exception {
 		ValueString query = new ValueString("SELECT first(1, name) + last(1,name) AS concat_name WHERE num_cores >= (SELECT min(num_cores) ORDER BY timestamp) ORDER BY creation ASC NULLS LAST");
-		root.installQuery(attribute, query);
-		String result = InterpreterMain.executeQueries(root);
+		InterpreterMain.installQuery(root, attribute, query);
+		String result = InterpreterMain.execute(root);
 		Assert.assertEquals("/uw: concat_name: [violet07, khaki31]\n/pjwstk: concat_name: [whatever01, whatever02]", result);
 
 //		System.out.print(result);
@@ -249,8 +249,8 @@ public class InterpreterTest {
 	@Test
 	public void query8Test() throws Exception {
 		ValueString query = new ValueString("SELECT sum(cardinality) AS cardinality");
-		root.installQuery(attribute, query);
-		String result = InterpreterMain.executeQueries(root);
+		InterpreterMain.installQuery(root, attribute, query);
+		String result = InterpreterMain.execute(root);
 		Assert.assertEquals("/uw: cardinality: 3\n/pjwstk: cardinality: 2\n/: cardinality: 5", result);
 
 //		System.out.print(result);
@@ -259,8 +259,8 @@ public class InterpreterTest {
 	@Test
 	public void query9Test() throws Exception {
 		ValueString query = new ValueString("SELECT land(cpu_usage < 0.5) AS cpu_ok");
-		root.installQuery(attribute, query);
-		String result = InterpreterMain.executeQueries(root);
+		InterpreterMain.installQuery(root, attribute, query);
+		String result = InterpreterMain.execute(root);
 		Assert.assertEquals("/uw: cpu_ok: false\n/pjwstk: cpu_ok: true", result);
 
 //		System.out.print(result);
@@ -269,8 +269,8 @@ public class InterpreterTest {
 	@Test
 	public void query10Test() throws Exception {
 		ValueString query = new ValueString("SELECT min(name) AS min_name, to_string(first(1, name)) AS max_name ORDER BY name DESC");
-		root.installQuery(attribute, query);
-		String result = InterpreterMain.executeQueries(root);
+		InterpreterMain.installQuery(root, attribute, query);
+		String result = InterpreterMain.execute(root);
 		Assert.assertEquals("/uw: min_name: khaki13\n/uw: max_name: [violet07]\n/pjwstk: min_name: whatever01\n/pjwstk: max_name: [whatever02]\n/: min_name: pjwstk\n/: max_name: [uw]", result);
 
 //		System.out.print(result);
@@ -279,8 +279,8 @@ public class InterpreterTest {
 	@Test
 	public void query11Test() throws Exception {
 		ValueString query = new ValueString("SELECT epoch() AS epoch, land(timestamp > epoch()) AS afterY2K");
-		root.installQuery(attribute, query);
-		String result = InterpreterMain.executeQueries(root);
+		InterpreterMain.installQuery(root, attribute, query);
+		String result = InterpreterMain.execute(root);
 		Assert.assertEquals("/uw: epoch: 2000/01/01 00:00:00.000\n/uw: afterY2K: true\n/pjwstk: epoch: 2000/01/01 00:00:00.000\n/pjwstk: afterY2K: true\n/: epoch: 2000/01/01 00:00:00.000\n/: afterY2K: true", result);
 
 //		System.out.print(result);
@@ -289,8 +289,8 @@ public class InterpreterTest {
 	@Test
 	public void query12Test() throws Exception {
 		ValueString query = new ValueString("SELECT min(timestamp) + (max(timestamp) - epoch()) / 2 AS t2");
-		root.installQuery(attribute, query);
-		String result = InterpreterMain.executeQueries(root);
+		InterpreterMain.installQuery(root, attribute, query);
+		String result = InterpreterMain.execute(root);
 		Assert.assertEquals("/uw: t2: 2019/04/16 05:31:30.000\n/pjwstk: t2: 2019/04/16 08:48:30.000\n/: t2: 2019/04/16 07:12:19.684", result);
 
 //		System.out.print(result);
@@ -299,8 +299,8 @@ public class InterpreterTest {
 	@Test
 	public void query13Test() throws Exception {
 		ValueString query = new ValueString("SELECT lor(unfold(some_names) + \"xx\" REGEXP \"([a-z]*)atkax([a-z]*)\") AS beatka");
-		root.installQuery(attribute, query);
-		String result = InterpreterMain.executeQueries(root);
+		InterpreterMain.installQuery(root, attribute, query);
+		String result = InterpreterMain.execute(root);
 		Assert.assertEquals("/uw: beatka: true", result);
 
 //		System.out.print(result);
@@ -309,8 +309,8 @@ public class InterpreterTest {
 	@Test
 	public void query14Test() throws Exception {
 		ValueString query = new ValueString("SELECT (SELECT avg(cpu_usage) WHERE false) AS smth");
-		root.installQuery(attribute, query);
-		String result = InterpreterMain.executeQueries(root);
+		InterpreterMain.installQuery(root, attribute, query);
+		String result = InterpreterMain.execute(root);
 		Assert.assertEquals("/uw: smth: NULL\n/pjwstk: smth: NULL", result);
 
 //		System.out.print(result);
@@ -319,8 +319,8 @@ public class InterpreterTest {
 	@Test
 	public void query15Test() throws Exception {
 		ValueString query = new ValueString("SELECT avg(cpu_usage) AS cpu_usage WHERE (SELECT sum(cardinality)) > (SELECT to_integer((1 + 2 + 3 + 4) / 5))");
-		root.installQuery(attribute, query);
-		String result = InterpreterMain.executeQueries(root);
+		InterpreterMain.installQuery(root, attribute, query);
+		String result = InterpreterMain.execute(root);
 		Assert.assertEquals("/uw: cpu_usage: 0.5\n/pjwstk: cpu_usage: NULL\n/: cpu_usage: NULL", result);
 
 //		System.out.print(result);
@@ -329,8 +329,8 @@ public class InterpreterTest {
 	@Test
 	public void query16Test() throws Exception {
 		ValueString query = new ValueString("SELECT ceil(to_double(min(num_cores)) / 1.41) AS sth");
-		root.installQuery(attribute, query);
-		String result = InterpreterMain.executeQueries(root);
+		InterpreterMain.installQuery(root, attribute, query);
+		String result = InterpreterMain.execute(root);
 		Assert.assertEquals("/uw: sth: 3.0\n/pjwstk: sth: 5.0", result);
 
 //		System.out.print(result);
@@ -339,8 +339,8 @@ public class InterpreterTest {
 	@Test
 	public void query17Test() throws Exception {
 		ValueString query = new ValueString("SELECT floor(5.0 / 1.9) AS fl");
-		root.installQuery(attribute, query);
-		String result = InterpreterMain.executeQueries(root);
+		InterpreterMain.installQuery(root, attribute, query);
+		String result = InterpreterMain.execute(root);
 		Assert.assertEquals("/uw: fl: 2.0\n/pjwstk: fl: 2.0\n/: fl: 2.0", result);
 
 //		System.out.print(result);
@@ -349,8 +349,8 @@ public class InterpreterTest {
 	@Test
 	public void query18Test() throws Exception {
 		ValueString query = new ValueString("SELECT to_time(\"2013/07/05 12:54:32.098\") + to_duration(6811) AS tim");
-		root.installQuery(attribute, query);
-		String result = InterpreterMain.executeQueries(root);
+		InterpreterMain.installQuery(root, attribute, query);
+		String result = InterpreterMain.execute(root);
 		Assert.assertEquals("/uw: tim: 2013/07/05 12:54:38.909\n/pjwstk: tim: 2013/07/05 12:54:38.909\n/: tim: 2013/07/05 12:54:38.909", result);
 
 //		System.out.print(result);
@@ -359,8 +359,8 @@ public class InterpreterTest {
 	@Test
 	public void query19Test() throws Exception {
 		ValueString query = new ValueString("SELECT avg(cpu_usage * to_double(num_cores)) AS cpu_load, sum(num_cores) AS num_cores");
-		root.installQuery(attribute, query);
-		String result = InterpreterMain.executeQueries(root);
+		InterpreterMain.installQuery(root, attribute, query);
+		String result = InterpreterMain.execute(root);
 		Assert.assertEquals("/uw: cpu_load: 2.7\n/uw: num_cores: 6\n/pjwstk: cpu_load: 2.95\n/pjwstk: num_cores: 20", result);
 
 //		System.out.print(result);

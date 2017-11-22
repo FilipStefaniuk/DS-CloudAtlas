@@ -41,17 +41,10 @@ public class Agent implements AgentInterface {
         return result;
     }
 
-//    @Override
-//    public void run() {
-//        while(true) {
-//            try {
-//                InterpreterMain.executeQueries(root);
-//            } catch (Exception e) {}
-//        }
-//    }
-
-    public void executeQueries() throws Exception{
-        InterpreterMain.executeQueries(root);
+    public void update() throws Exception {
+        try {
+            InterpreterMain.execute(root);
+        } catch (Exception e) {}
     }
 
     @Override
@@ -77,13 +70,21 @@ public class Agent implements AgentInterface {
 
     @Override
     public void installQuery(Attribute attribute, ValueString value) throws RemoteException {
-        root.installQuery(attribute, value);
+        try {
+            InterpreterMain.installQuery(root, attribute, value);
+        } catch (Exception e) {
+            throw new RemoteException();
+        }
     }
 
 
     @Override
     public void uninstallQuery(Attribute attribute) throws RemoteException {
-        root.uninstallQuery(attribute);
+        try {
+            InterpreterMain.uninstallQuery(root, attribute);
+        } catch (Exception e) {
+            throw new RemoteException();
+        }
     }
 
     @Override

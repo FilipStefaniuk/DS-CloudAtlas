@@ -32,7 +32,7 @@ import pl.edu.mimuw.cloudatlas.model.TypeCollection;
 import pl.edu.mimuw.cloudatlas.model.Value;
 import pl.edu.mimuw.cloudatlas.model.ValueList;
 
-abstract class Result {
+abstract public class Result {
 	public interface BinaryOperation {
 		public Value perform(Value v1, Value v2);
 	}

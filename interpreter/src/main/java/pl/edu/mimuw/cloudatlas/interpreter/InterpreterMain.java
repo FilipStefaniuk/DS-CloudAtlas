@@ -1,14 +1,12 @@
 package pl.edu.mimuw.cloudatlas.interpreter;
 
-import pl.edu.mimuw.cloudatlas.interpreter.query.Yylex;
-import pl.edu.mimuw.cloudatlas.interpreter.query.parser;
 import pl.edu.mimuw.cloudatlas.model.*;
 
-import java.io.ByteArrayInputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.ParseException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class InterpreterMain {
 
@@ -20,51 +18,125 @@ public class InterpreterMain {
         while(scanner.hasNext()) {
             try {
                 String[] inputQuery = scanner.next().split(":");
-                if (inputQuery.length != 2)
-                    throw new Exception();
-                Attribute queryName = new Attribute(inputQuery[0].trim());
-
-                root.installQuery(queryName, new ValueString(inputQuery[1]));
-                System.out.println(executeQueries(root));
-                root.uninstallQuery(queryName);
-
+                if (inputQuery.length == 2) {
+                    Attribute queryName = new Attribute(inputQuery[0].trim());
+                    installQuery(root, queryName, new ValueString(inputQuery[1]));
+                    System.out.println(execute(root));
+                    uninstallQuery(root, queryName);
+                } else {
+                    System.err.println("Wrong input format, should be: <&attribute_name>: <SQL_query1_1>; ...");
+                }
             } catch (Exception e) {
-                System.err.println("BAD INPUT");
+                System.err.println(e.getMessage());
             }
         }
     }
 
-    public static String executeQueries(ZMI zmi) throws Exception {
-        StringJoiner stringJoiner = new StringJoiner("\n");
+    public static void installQuery(ZMI zmi, Attribute attribute, ValueString value) throws Exception {
+        validateQuery(zmi, attribute, value);
+        addQuery(zmi, attribute, value);
+    }
 
+    private static void addQuery(ZMI zmi, Attribute attribute, ValueString value) {
+
+        if (zmi.getSons().isEmpty()) {
+            return;
+        }
+
+        for(ZMI son : zmi.getSons()) {
+            addQuery(son, attribute, value);
+        }
+
+        zmi.getAttributes().add(attribute, value);
+    }
+
+    private static void validateQuery(ZMI zmi, Attribute attribute, ValueString valueString) {
+
+        if (zmi.getSons().isEmpty())
+            return;
+
+        if(zmi.getAttributes().getOrNull(attribute) != null)
+            throw new InternalInterpreterException("Attribute " + attribute.getName() + " already exists.");
+
+        for(ZMI son : zmi.getSons()) {
+            validateQuery(son, attribute, valueString);
+        }
+
+        Interpreter interpreter = new Interpreter(zmi);
+        List<QueryResult> old_result = new ArrayList<>();
+        List<QueryResult> results;
+
+        try {
+            results = interpreter.executeQuery(valueString.getValue());
+            for (Map.Entry<Attribute, Value> entry : zmi.getAttributes()) {
+                if (entry.getKey().getName().startsWith("&")) {
+                    String query = ((ValueString) entry.getValue()).getValue();
+                    old_result.addAll(interpreter.executeQuery(query));
+                }
+            }
+        } catch(Exception e) {
+            throw new InternalInterpreterException("Query parsing error.");
+        }
+
+        Set<Attribute> old_attributes = new HashSet<>(old_result.stream().map(QueryResult::getName).collect(Collectors.toList()));
+
+        for (QueryResult r : results) {
+            if (old_attributes.contains(r.getName()))
+                throw new InternalInterpreterException("Other query modifies attribute " + r.getName() + ".");
+        }
+    }
+
+    public static void uninstallQuery(ZMI zmi, Attribute attribute) throws Exception{
+
+        if(zmi.getSons().isEmpty())
+            return;
+
+        Value query = zmi.getAttributes().getOrNull(attribute);
+        if (query != null) {
+
+            zmi.getAttributes().remove(attribute);
+
+            Interpreter interpreter = new Interpreter(zmi);
+            List<QueryResult> results = interpreter.executeQuery(((ValueString) query).getValue());
+
+            for (QueryResult r : results) {
+                zmi.getAttributes().remove(r.getName());
+            }
+        }
+
+        for(ZMI son : zmi.getSons()) {
+            uninstallQuery(son, attribute);
+        }
+    }
+
+    public static String execute(ZMI zmi) throws Exception {
         if(zmi.getSons().isEmpty())
             return "";
 
+        StringJoiner stringJoiner = new StringJoiner("\n");
         for(ZMI son : zmi.getSons()) {
-            String r = executeQueries(son);
+            String r = execute(son);
             if (!r.isEmpty())
                 stringJoiner.add(r);
         }
-        try {
-            StringJoiner queryJoiner = new StringJoiner(";");
-            for(Map.Entry<Attribute, Value> entry : zmi.getAttributes())
-                if(entry.getKey().getName().startsWith("&"))
-                    queryJoiner.add(((ValueString) entry.getValue()).getValue());
 
-            String query = queryJoiner.toString();
-            if (query.isEmpty())
-                return "";
-            Interpreter interpreter = new Interpreter(zmi);
-            Yylex lex = new Yylex(new ByteArrayInputStream(query.getBytes()));
-            List<QueryResult> result = interpreter.interpretProgram((new parser(lex)).pProgram());
+        List<QueryResult> result = new ArrayList<>();
+        Interpreter interpreter = new Interpreter(zmi);
 
-            PathName zone = getPathName(zmi);
-            for (QueryResult r : result) {
-                stringJoiner.add(zone + ": " + r);
-                zmi.getAttributes().addOrChange(r.getName(), r.getValue());
+        for(Map.Entry<Attribute, Value> entry : zmi.getAttributes()) {
+            if (entry.getKey().getName().startsWith("&")) {
+                String query = ((ValueString) entry.getValue()).getValue();
+                result.addAll(interpreter.executeQuery(query));
             }
+        }
 
-        }catch (InterpreterException exception) {}
+        for(QueryResult r : result)
+            zmi.getAttributes().addOrChange(r.getName(), r.getValue());
+
+        PathName zone = getPathName(zmi);
+        for (QueryResult r : result) {
+            stringJoiner.add(zone + ": " + r);
+        }
 
         return stringJoiner.toString();
     }

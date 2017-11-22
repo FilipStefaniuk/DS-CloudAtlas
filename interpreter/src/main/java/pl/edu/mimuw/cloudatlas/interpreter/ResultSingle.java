@@ -28,7 +28,7 @@ import pl.edu.mimuw.cloudatlas.model.*;
 
 import java.util.ArrayList;
 
-class ResultSingle extends Result {
+public class ResultSingle extends Result {
 
 	private final Value value;
 
@@ -44,7 +44,7 @@ class ResultSingle extends Result {
 	@Override
 	protected Result binaryOperationTyped(BinaryOperation operation, ResultColumn right) {
 		if (this.getValue().isNull() || right.getValue().isNull())
-			return new ResultSingle(ValueNull.getInstance());
+			return new ResultColumn(new ValueList(null, ((TypeCollection)right.getType()).getElementType()));
 
 		ArrayList<Value> newList = new ArrayList<>();
 		for (Value value : right.getColumn())
@@ -57,7 +57,7 @@ class ResultSingle extends Result {
 	@Override
 	protected Result binaryOperationTyped(BinaryOperation operation, ResultList right) {
 		if (this.getValue().isNull() || right.getValue().isNull())
-			return new ResultSingle(ValueNull.getInstance());
+			return new ResultList(new ValueList(null, ((TypeCollection)right.getType()).getElementType()));
 
 		ArrayList<Value> newList = new ArrayList<>();
 		for (Value value : right.getList())

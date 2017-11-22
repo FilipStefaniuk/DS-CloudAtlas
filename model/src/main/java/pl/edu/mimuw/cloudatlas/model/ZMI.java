@@ -153,32 +153,6 @@ public class ZMI implements Cloneable {
 		return result;
 	}
 
-	public void installQuery(Attribute attribute, ValueString value) {
-		attributes.addOrChange(attribute, value);
-
-		if (sons.isEmpty()) {
-			return;
-		}
-
-		for(ZMI son : sons) {
-			son.installQuery(attribute, value);
-		}
-
-	}
-
-	public void uninstallQuery(Attribute attribute) {
-		attributes.remove(attribute);
-
-		if (sons.isEmpty()) {
-			return;
-		}
-
-		for(ZMI son : sons) {
-			son.uninstallQuery(attribute);
-		}
-	}
-
-
 	/**
 	 * Prints a textual representation of this ZMI. It contains only attributes of this node.
 	 * 

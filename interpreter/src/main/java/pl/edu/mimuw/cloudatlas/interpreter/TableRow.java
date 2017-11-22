@@ -25,6 +25,7 @@
 package pl.edu.mimuw.cloudatlas.interpreter;
 
 import java.util.Arrays;
+import java.util.List;
 
 import pl.edu.mimuw.cloudatlas.model.Value;
 
@@ -42,5 +43,9 @@ public class TableRow {
 
 	public Value getIth(int i) {
 		return columns[i];
+	}
+
+	public List<Value> asList() {
+		return Arrays.asList(columns);
 	}
 }

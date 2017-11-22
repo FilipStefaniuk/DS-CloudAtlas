@@ -6,16 +6,16 @@ import java.util.ArrayList;
 
 public class ResultColumn extends Result{
 
-    private final Value value;
+    private final ValueList value;
 
-    public ResultColumn(Value value) {
+    public ResultColumn(ValueList value) {
         this.value = value;
     }
 
     @Override
     protected Result binaryOperationTyped(Result.BinaryOperation operation, ResultSingle right) {
         if (this.getValue().isNull() || right.getValue().isNull())
-            return new ResultSingle(ValueNull.getInstance());
+            return new ResultColumn(new ValueList(null, ((TypeCollection)this.getType()).getElementType()));
 
         ArrayList<Value> newList = new ArrayList<>();
         for (Value v : getColumn())
@@ -27,7 +27,7 @@ public class ResultColumn extends Result{
     @Override
     protected Result binaryOperationTyped(Result.BinaryOperation operation, ResultColumn right) {
         if (this.getValue().isNull() || right.getValue().isNull())
-            return new ResultSingle(ValueNull.getInstance());
+            return new ResultColumn(new ValueList(null, ((TypeCollection)this.getType()).getElementType()));
 
         ArrayList<Value> newList = new ArrayList<>();
         ValueList other = right.getColumn();
@@ -51,7 +51,7 @@ public class ResultColumn extends Result{
     @Override
     public Result unaryOperation(UnaryOperation operation) {
         if (this.getValue().isNull())
-            return new ResultColumn(ValueNull.getInstance());
+            return new ResultColumn(new ValueList(null, ((TypeCollection)this.getType()).getElementType()));
 
         ArrayList<Value> newList = new ArrayList<>();
         for (Value v : getColumn())
@@ -77,7 +77,7 @@ public class ResultColumn extends Result{
 
     @Override
     public ValueList getColumn() {
-        return ((ValueList) value);
+        return value;
     }
 
     @Override
