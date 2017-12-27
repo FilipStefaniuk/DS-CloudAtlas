@@ -1,19 +1,14 @@
 package pl.edu.mimuw.cloudatlas.agent.framework;
 
 public abstract class MessageWithResponse extends Message {
-    private Integer SenderID;
-    private Integer HandlerID;
 
-    public MessageWithResponse(Integer senderID, Integer handlerID) {
-        SenderID = senderID;
-        HandlerID = handlerID;
+    private Address responseAddress;
+
+    public MessageWithResponse(Address responseAddress) {
+        this.responseAddress = responseAddress;
     }
 
-    public Integer getSenderID() {
-        return SenderID;
-    }
-
-    public Integer getHandlerID() {
-        return HandlerID;
+    public Address getResponseAddress() {
+        return responseAddress;
     }
 }

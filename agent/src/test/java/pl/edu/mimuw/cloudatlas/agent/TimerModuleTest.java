@@ -1,18 +1,18 @@
 package pl.edu.mimuw.cloudatlas.agent;
 
-import org.junit.Before;
-import org.junit.runner.RunWith;
-import org.mockito.Mockito;
-
-import org.junit.Test;
-import org.powermock.reflect.Whitebox;
-import pl.edu.mimuw.cloudatlas.agent.framework.EventQueue;
-import pl.edu.mimuw.cloudatlas.agent.timer.ScheduleAlarmMessage;
-import pl.edu.mimuw.cloudatlas.agent.timer.TimerModule;
-
-import java.sql.Time;
-import java.util.Arrays;
-import java.util.concurrent.PriorityBlockingQueue;
+//import org.junit.Before;
+//import org.junit.runner.RunWith;
+//import org.mockito.Mockito;
+//
+//import org.junit.Test;
+//import org.powermock.reflect.Whitebox;
+//import pl.edu.mimuw.cloudatlas.agent.framework.EventQueue;
+//import pl.edu.mimuw.cloudatlas.agent.timer.ScheduleAlarmMessage;
+//import pl.edu.mimuw.cloudatlas.agent.timer.TimerModule;
+//
+//import java.sql.Time;
+//import java.util.Arrays;
+//import java.util.concurrent.PriorityBlockingQueue;
 
 
 //public class TimerModuleTest {
