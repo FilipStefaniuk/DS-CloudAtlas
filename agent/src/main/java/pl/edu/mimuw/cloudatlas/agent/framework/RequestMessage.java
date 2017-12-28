@@ -1,10 +1,10 @@
 package pl.edu.mimuw.cloudatlas.agent.framework;
 
-public abstract class MessageWithResponse extends Message {
+public class RequestMessage extends Message {
 
     private Address responseAddress;
 
-    public MessageWithResponse(Address responseAddress) {
+    public RequestMessage(Address responseAddress) {
         this.responseAddress = responseAddress;
     }
 

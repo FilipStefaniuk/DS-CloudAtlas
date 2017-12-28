@@ -7,7 +7,7 @@
 //import java.util.HashSet;
 //import java.util.Set;
 //
-//public class Agent implements AgentInterface {
+//public class Agent implements AgentRMIInterface {
 //
 //    private ZMI root;
 //    private Set<ValueContact> fallbackContacts;

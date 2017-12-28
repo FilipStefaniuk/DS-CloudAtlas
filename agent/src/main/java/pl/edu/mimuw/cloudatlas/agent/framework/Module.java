@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Module {
 
-    String name();
+    String value();
 
     boolean unique() default false;
 

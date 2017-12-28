@@ -1,30 +1,25 @@
 //package pl.edu.mimuw.cloudatlas.agent;
 //
-//import org.junit.Assert;
 //import org.junit.Test;
-//import pl.edu.mimuw.cloudatlas.model.PathName;
-//import pl.edu.mimuw.cloudatlas.model.ValueString;
-//import pl.edu.mimuw.cloudatlas.model.ZMI;
+//import pl.edu.mimuw.cloudatlas.agent.framework.Address;
+//import pl.edu.mimuw.cloudatlas.agent.framework.EventQueue;
+//import pl.edu.mimuw.cloudatlas.agent.framework.Message;
+//import pl.edu.mimuw.cloudatlas.agent.messages.PathNameRequestMessage;
+//import pl.edu.mimuw.cloudatlas.agent.modules.InterpreterModule;
+//import pl.edu.mimuw.cloudatlas.agent.modules.RMIModule;
+//import pl.edu.mimuw.cloudatlas.agent.modules.ZMIModule;
 //
 //public class AgentTest {
 //
 //    @Test
-//    public void getZMIByPathTest() throws Exception {
-//        Agent agent = new Agent();
-//        ZMI zmi = agent.getZMIByPathName(new PathName("/uw/violet07"));
-//        String result = ((ValueString) zmi.getAttributes().get("name")).getValue();
-//        Assert.assertEquals("violet07", result);
-//    }
+//    public void testZmiInterpreter() {
+////        EventQueue eq = EventQueue.builder()
+////                .executor(ZMIModule.class, RMIModule.class)
+////                .build();
 //
-////    @Test
-////    public void getAttributesOfZoneTest() throws Exception {
-////        Agent agent = new Agent();
-////        System.out.println(agent.getAttributesOfZone(new PathName("/uw/violet07")));
-////    }
+//        RMIModule module = new RMIModule();
 //
-//    @Test
-//    public void getAgentZonesTest() throws Exception {
-//        Agent agent = new Agent();
-//        System.out.println(agent.getAgentZones());
+////        eq.shutdown();
+////        eq.start();
 //    }
 //}

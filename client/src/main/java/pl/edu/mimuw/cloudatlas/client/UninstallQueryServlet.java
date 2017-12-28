@@ -1,6 +1,6 @@
 package pl.edu.mimuw.cloudatlas.client;
 
-import pl.edu.mimuw.cloudatlas.agent.AgentInterface;
+import pl.edu.mimuw.cloudatlas.agent.AgentRMIInterface;
 import pl.edu.mimuw.cloudatlas.model.Attribute;
 
 import javax.servlet.ServletException;
@@ -26,7 +26,7 @@ public class UninstallQueryServlet extends HttpServlet{
 
         try {
             Registry registry = LocateRegistry.getRegistry("localhost", 1324);
-            AgentInterface stub = (AgentInterface) registry.lookup("Agent");
+            AgentRMIInterface stub = (AgentRMIInterface) registry.lookup("Agent");
             stub.uninstallQuery(new Attribute('&' + name));
 
         } catch (NotBoundException e) {

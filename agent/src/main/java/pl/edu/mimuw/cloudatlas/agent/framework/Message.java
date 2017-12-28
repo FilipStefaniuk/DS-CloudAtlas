@@ -6,7 +6,7 @@ public abstract class Message implements Serializable {
 
     private Address address;
 
-    void setAddress(Address address) {
+    public void setAddress(Address address) {
         this.address = address;
     }
 

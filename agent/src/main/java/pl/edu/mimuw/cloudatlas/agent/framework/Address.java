@@ -18,7 +18,7 @@ public class Address implements Serializable {
         if (annotation == null)
             throw new IllegalArgumentException();
 
-        this.module = annotation.name();
+        this.module = annotation.value();
         this.handler = handler;
     }
 

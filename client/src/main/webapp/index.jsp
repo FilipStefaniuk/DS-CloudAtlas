@@ -1,6 +1,6 @@
 <%@ page import="java.rmi.registry.Registry" %>
 <%@ page import="java.rmi.registry.LocateRegistry" %>
-<%@ page import="pl.edu.mimuw.cloudatlas.agent.AgentInterface" %>
+<%@ page import="pl.edu.mimuw.cloudatlas.agent.AgentRMIInterface" %>
 <%@ page import="pl.edu.mimuw.cloudatlas.model.PathName" %>
 <%@ page import="java.util.Set" %>
 <!DOCTYPE html>
@@ -27,8 +27,8 @@
 
             <%--Select Zone--%>
             <%
-                Registry registry = LocateRegistry.getRegistry("localhost", 1324);
-                AgentInterface stub = (AgentInterface) registry.lookup("Agent");
+                Registry registry = LocateRegistry.getRegistry("localhost");
+                AgentRMIInterface stub = (AgentRMIInterface) registry.lookup("Agent");
                 Set<PathName> names = stub.getAgentZones();
             %> <select id="zones" class="form-control selectWidth"> <%
                 for(PathName name : names) {

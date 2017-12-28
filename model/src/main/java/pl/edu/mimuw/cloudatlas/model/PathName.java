@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Represent a fully qualified name of a zone, also known as a global name or a path name. This class is immutable.
@@ -83,6 +84,11 @@ public class PathName implements Serializable {
 			this.name = currentName;
 		}
 	}
+
+	public static PathName getPathName(ZMI zmi) {
+        String name = ((ValueString)zmi.getAttributes().get("name")).getValue();
+        return zmi.getFather() == null? PathName.ROOT : getPathName(zmi.getFather()).levelDown(name);
+    }
 	
 	/**
 	 * Gets zones names at subsequent levels of hierarchy, starting from root. For the root zone, this method returns an
@@ -138,6 +144,37 @@ public class PathName implements Serializable {
 		} catch(IndexOutOfBoundsException exception) {
 			throw new UnsupportedOperationException("getSingletonName() is not supported for the root zone.");
 		}
+	}
+
+	/**
+	 * Finds ZMI with the current path given root
+	 *
+	 * @param root a root ZMI
+	 * @return Null if there is no ZMI with path
+	 */
+	public ZMI findZMI(ZMI root) {
+
+		if (root == null) {
+			return null;
+		}
+
+		Integer index = 0;
+		ZMI zmi = root;
+		Boolean stop = false;
+
+		while (components.size() > index && !stop) {
+			stop = true;
+			for (ZMI son : zmi.getSons()) {
+				if (((ValueString) son.getAttributes().get("name")).getValue().equals(components.get(index))) {
+					index++;
+					zmi = son;
+					stop = false;
+					break;
+				}
+			}
+		}
+
+		return stop ? null : zmi;
 	}
 	
 	/**

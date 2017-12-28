@@ -1,14 +1,15 @@
-package pl.edu.mimuw.cloudatlas.agent.zmi;
+package pl.edu.mimuw.cloudatlas.agent.messages;
 
 import pl.edu.mimuw.cloudatlas.agent.framework.Message;
 import pl.edu.mimuw.cloudatlas.model.AttributesMap;
 import pl.edu.mimuw.cloudatlas.model.PathName;
 
-public class AttributesMessage extends Message{
+public class AttributesMapMessage extends Message {
+
     AttributesMap attributesMap;
     PathName pathName;
 
-    public AttributesMessage(AttributesMap attributesMap, PathName pathName) {
+    public AttributesMapMessage(AttributesMap attributesMap, PathName pathName) {
         this.attributesMap = attributesMap;
         this.pathName = pathName;
     }

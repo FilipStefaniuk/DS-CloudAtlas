@@ -36,7 +36,7 @@ abstract public class ModuleBase {
             try {
 
                 ModuleBase object = clazz.newInstance();
-                object.name = annotation.name();
+                object.name = annotation.value();
                 object.unique = annotation.unique();
                 object.dependencies = Arrays.asList(annotation.dependencies());
                 object.eventQueue = eventQueue;
@@ -50,18 +50,19 @@ abstract public class ModuleBase {
                             throw new IllegalStateException("Handlers must have type MessageHandler");
                         }
 
-                        if (object.handlers.containsKey(handler.id())) {
+                        if (object.handlers.containsKey(handler.value())) {
                             throw new IllegalStateException("Handler keys must be unique.");
                         }
 
-                        object.handlers.put(handler.id(), (MessageHandler<?>) field.get(object));
+                        field.setAccessible(true);
+                        object.handlers.put(handler.value(), (MessageHandler<?>) field.get(object));
                     }
                 }
 
                 return object;
 
             } catch (InstantiationException | IllegalAccessException e) {
-                throw new InternalError("Failed to create module instance: " + annotation.name());
+                throw new InternalError("Failed to create module instance: " + annotation.value());
             }
         }
     }
@@ -85,12 +86,12 @@ abstract public class ModuleBase {
         handler.handleMessage(msg);
     }
 
-    public void sendMessage(Address address, Message msg) throws InterruptedException {
-        msg.setAddress(address);
-        eventQueue.sendMessage((Message) SerializationUtils.clone(msg));
+    public void sendMessage(Address address, Message msg) {
+            msg.setAddress(address);
+            eventQueue.sendMessage((Message) SerializationUtils.clone(msg));
     }
 
-    public void shutdown() throws InterruptedException {
+    public void shutdown() {
         eventQueue.shutdown();
     }
 }

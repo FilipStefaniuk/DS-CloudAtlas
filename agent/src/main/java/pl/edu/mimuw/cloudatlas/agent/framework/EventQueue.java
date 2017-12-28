@@ -1,5 +1,8 @@
 package pl.edu.mimuw.cloudatlas.agent.framework;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -11,11 +14,13 @@ public class EventQueue {
     private List<Executor> executors = new ArrayList<>();
     private Map<String, List<BlockingQueue<Message>>> queueMap = new HashMap<>();
 
-    static Builder builder() {
+    private static Logger LOGGER = LogManager.getLogger(EventQueue.class);
+
+    public static Builder builder() {
         return new EventQueue.Builder();
     }
 
-    static class Builder {
+    public static class Builder {
 
         private EventQueue eventQueue = new EventQueue();
         private Map<String, Class<? extends ModuleBase>> registeredModules = new HashMap<>();
@@ -68,20 +73,36 @@ public class EventQueue {
 
     private EventQueue() {}
 
-    void sendMessage(Message msg) throws InterruptedException {
-        List<BlockingQueue<Message>> list = queueMap.get(msg.getAddress().getModule());
-        list.get(rand.nextInt(list.size())).put(msg);
-    }
+    public void sendMessage(Message msg) {
 
-    void shutdown() throws InterruptedException {
-        for(List<BlockingQueue<Message>> queueList : queueMap.values()) {
-            for(BlockingQueue<Message> queue : queueList) {
-                queue.put(new ShutdownMessage());
-            }
+        try {
+
+            List<BlockingQueue<Message>> list = queueMap.get(msg.getAddress().getModule());
+            list.get(rand.nextInt(list.size())).put(msg);
+
+        } catch (InterruptedException e) {
+            LOGGER.error("Failed to send message.", e);
         }
     }
 
-    public void start() throws InterruptedException {
+    public void shutdown() {
+
+        LOGGER.info("Shutting down event queue.");
+
+        try {
+            for (List<BlockingQueue<Message>> queueList : queueMap.values()) {
+                for (BlockingQueue<Message> queue : queueList) {
+                    queue.put(new ShutdownMessage());
+                }
+            }
+        } catch (InterruptedException e) {
+            LOGGER.error("Failed to shut down event queue.", e);
+        }
+    }
+
+    public void start() {
+
+        LOGGER.info("Starting event queue.");
 
         List<Thread> threads = new ArrayList<>();
         for (Executor e : executors) {
@@ -90,8 +111,12 @@ public class EventQueue {
             t.start();
         }
 
-        for (Thread t: threads) {
-            t.join();
+        try {
+            for (Thread t : threads) {
+                t.join();
+            }
+        } catch (InterruptedException e) {
+            LOGGER.error("Message queue interrupted.", e);
         }
     }
 }
