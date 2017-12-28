@@ -14,4 +14,5 @@ java -Djava.rmi.server.codebase=file:/home/filip/Documents/cloudatlas/agent/targ
 #java -jar fetcher/target/fetcher-1.0-SNAPSHOT-jar-with-dependencies.jar &
 #echo "fetcher running"
 
+
 #java -classpath /home/filip/Documents/cloudatlas/agent/target/agent-1.0-SNAPSHOT-jar-with-dependencies.jar -Djava.rmi.server.codebase=file:/home/filip/Documents/cloudatlas/agent/target/agent-1.0-SNAPSHOT.jar  pl.edu.mimuw.cloudatlas.agent.AgentServer &
