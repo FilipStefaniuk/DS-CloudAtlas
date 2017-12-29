@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 public class EventQueue {
 
     private Random rand = new Random();
+    private UUID id = UUID.randomUUID();
     private List<Executor> executors = new ArrayList<>();
     private Map<String, List<BlockingQueue<Message>>> queueMap = new HashMap<>();
 
@@ -73,6 +74,7 @@ public class EventQueue {
 
     private EventQueue() {}
 
+    // If message is not addressed - broadcast.
     public void sendMessage(Message msg) {
 
         try {
@@ -85,6 +87,7 @@ public class EventQueue {
         }
     }
 
+    // Change shutdown to broadcast shutdown message.
     public void shutdown() {
 
         LOGGER.info("Shutting down event queue.");
@@ -118,5 +121,9 @@ public class EventQueue {
         } catch (InterruptedException e) {
             LOGGER.error("Message queue interrupted.", e);
         }
+    }
+
+    public UUID getId() {
+        return id;
     }
 }

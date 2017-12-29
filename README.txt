@@ -39,3 +39,6 @@ Brakujące rzeczy:
 
 *Client:
 	- Brak frontendu do setContacts
+
+
+

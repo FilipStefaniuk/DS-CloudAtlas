@@ -13,6 +13,7 @@ abstract public class ModuleBase {
     private List<String> dependencies;
     private Map<Integer, MessageHandler<?>> handlers;
 
+
     public static ModuleBase.ModuleFactory moduleFacotry(EventQueue eventQueue) {
         return new ModuleFactory(eventQueue);
     }
@@ -93,5 +94,9 @@ abstract public class ModuleBase {
 
     public void shutdown() {
         eventQueue.shutdown();
+    }
+
+    public UUID getEventQueueId() {
+        return eventQueue.getId();
     }
 }
