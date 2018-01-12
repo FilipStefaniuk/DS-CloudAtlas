@@ -5,11 +5,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cfg4j.provider.ConfigurationProvider;
 import pl.edu.mimuw.cloudatlas.agent.framework.*;
-import pl.edu.mimuw.cloudatlas.agent.messages.IdMessage;
+import pl.edu.mimuw.cloudatlas.agent.messages.FromNetworkMessage;
 import pl.edu.mimuw.cloudatlas.agent.messages.NetworkMessage;
 import pl.edu.mimuw.cloudatlas.agent.messages.TimerMessage;
+import pl.edu.mimuw.cloudatlas.model.PathName;
 
 import java.io.Serializable;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
@@ -32,11 +34,13 @@ public class CommunicationModule extends ModuleBase {
     public static final int CLEAR = 2;
 
     private Integer port;
-    private Long nextId = 0L;
+    private PathName agentId;
     private Long clearDelay;
     private Long retryConnectDelay;
+
+    private Long nextId = 0L;
     private ConcurrentHashMap<PartialMessageId, PartialMessage> partialMessages = new ConcurrentHashMap<>();
-    private BlockingQueue<NetworkMessage> toSendQueue = new LinkedBlockingQueue<>();
+    private BlockingQueue<NetworkMessage<?>> toSendQueue = new LinkedBlockingQueue<>();
 
     @Handler(SEND)
     private final MessageHandler<?> h1 = new MessageHandler<NetworkMessage>() {
@@ -55,14 +59,14 @@ public class CommunicationModule extends ModuleBase {
     };
 
     @Handler(CLEAR)
-    private final MessageHandler<?> h2 = new MessageHandler<IdMessage>() {
+    private final MessageHandler<?> h2 = new MessageHandler<GenericMessage<PartialMessageId>>() {
         @Override
-        protected void handle(IdMessage message) {
+        protected void handle(GenericMessage<PartialMessageId> message) {
             try {
 
                 LOGGER.debug("CLEAR: IN: " + message.toString());
 
-                partialMessages.remove(message.getId());
+                partialMessages.remove(message.getData());
 
             } catch (Exception e) {
                 LOGGER.error("CLEAR: " + e.getMessage(), e);
@@ -82,7 +86,11 @@ public class CommunicationModule extends ModuleBase {
 
                     DatagramChannel channel = DatagramChannel.open();
 
-                    byte [] bytes = SerializationUtils.serialize(msg.getMessage());
+                    FromNetworkMessage<?> toSendMessage =
+                            new FromNetworkMessage<>(msg.getMessage().getData(), InetAddress.getLocalHost(), port, agentId);
+                    toSendMessage.setAddress(msg.getMessage().getAddress());
+
+                    byte [] bytes = SerializationUtils.serialize(toSendMessage);
                     int count = (int) Math.ceil((double) bytes.length / (double) PACKET_SIZE);
                     long messageId = nextId++;
 
@@ -113,7 +121,6 @@ public class CommunicationModule extends ModuleBase {
 
     private final Thread receiver = new Thread(new Runnable() {
 
-        private DatagramChannel channel;
 
         @Override
         public void run() {
@@ -121,7 +128,7 @@ public class CommunicationModule extends ModuleBase {
                 try {
 
                     LOGGER.debug("RECEIVER: Binding new socket.");
-                    channel = DatagramChannel.open();
+                    DatagramChannel channel = DatagramChannel.open();
                     channel.socket().bind(new InetSocketAddress(port));
 
                     while (true) {
@@ -155,7 +162,7 @@ public class CommunicationModule extends ModuleBase {
                                 partialMessage = new PartialMessage(count, timerId, timestamp_snd, timestamp_rcv);
                                 partialMessages.put(messageId, partialMessage);
 
-                                Message timerMsg = new IdMessage(messageId);
+                                Message timerMsg = new GenericMessage<>(messageId);
                                 timerMsg.setAddress(new Address(CommunicationModule.class, CLEAR));
                                 Message msg = new TimerMessage(timerId, getName(),
                                         System.currentTimeMillis(), clearDelay, timerMsg);
@@ -170,6 +177,8 @@ public class CommunicationModule extends ModuleBase {
                                 partialMessages.remove(messageId);
                                 messageBytes = partialMessage.buildMessage();
                                 Long timerId = partialMessage.getTimerId();
+                                timestamp_snd = partialMessage.timestamp_snd;
+                                timestamp_rcv = partialMessage.timestamp_rcv;
 
                                 Message msg = new TimerMessage(timerId, getName(), null, null, null);
                                 Address address = new Address(TimerModule.class, TimerModule.CANCEL);
@@ -179,7 +188,9 @@ public class CommunicationModule extends ModuleBase {
                         }
 
                         if (messageBytes != null) {
-                            Message msg = (Message) SerializationUtils.deserialize(messageBytes);
+                            FromNetworkMessage msg = (FromNetworkMessage) SerializationUtils.deserialize(messageBytes);
+                            msg.setTimestampSnd(timestamp_snd);
+                            msg.setTimestampRcv(timestamp_rcv);
                             sendMessage(msg.getAddress(), msg);
                             LOGGER.debug("RECEIVER: OUT: " + msg.toString());
                         }
@@ -199,9 +210,11 @@ public class CommunicationModule extends ModuleBase {
 
     @Override
     public void initialize(ConfigurationProvider configurationProvider) {
+
         port = configurationProvider.getProperty("Agent.port", Integer.class);
         clearDelay = configurationProvider.getProperty("Agent.CommunicationModule.clearDelay", Long.class);
         retryConnectDelay = configurationProvider.getProperty("Agent.CommunicationModule.retryBindSocketDelay", Long.class);
+        agentId = new PathName(configurationProvider.getProperty("Agent.agentId", String.class));
 
         sender.start();
         receiver.start();
@@ -294,12 +307,5 @@ public class CommunicationModule extends ModuleBase {
             return timerId;
         }
 
-        public Long getTimestamp_snd() {
-            return timestamp_snd;
-        }
-
-        public Long getTimestamp_rcv() {
-            return timestamp_rcv;
-        }
     }
 }

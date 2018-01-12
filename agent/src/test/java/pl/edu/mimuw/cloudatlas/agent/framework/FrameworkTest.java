@@ -22,13 +22,13 @@
 //                if (counter > MAX)
 //                    shutdown();
 //                else{
-//                    sendMessage(new Address(Greeter.class, Greeter.HANDLE_ID), new SimpleMessage());
+//                    sendMessage(new Address(Greeter.class, Greeter.HANDLE_ID), new GenericMessage());
 //                }
 //            }
 //        };
 //    }
 //
-//    private static class SimpleMessage extends Message {}
+//    private static class GenericMessage extends Message {}
 //
 ////  --------------------------------------------------------------------------------------------------------------------
 //
@@ -40,7 +40,7 @@
 //                .executor(Greeter.class)
 //                .build();
 //
-//        SimpleMessage message = new SimpleMessage();
+//        GenericMessage message = new GenericMessage();
 //        message.setAddress(new Address(Greeter.class, Greeter.HANDLE_ID));
 //        eventQueue.sendMessage(message);
 //        eventQueue.start();

@@ -9,7 +9,7 @@ import pl.edu.mimuw.cloudatlas.agent.fetcher.Fetcher;
 import pl.edu.mimuw.cloudatlas.agent.framework.Address;
 import pl.edu.mimuw.cloudatlas.agent.framework.EventQueue;
 import pl.edu.mimuw.cloudatlas.agent.framework.Message;
-import pl.edu.mimuw.cloudatlas.agent.messages.EmptyMessage;
+import pl.edu.mimuw.cloudatlas.agent.framework.EmptyMessage;
 import pl.edu.mimuw.cloudatlas.agent.modules.*;
 
 import java.nio.file.Paths;

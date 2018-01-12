@@ -1,15 +1,17 @@
 package pl.edu.mimuw.cloudatlas.agent.messages;
 
+import pl.edu.mimuw.cloudatlas.agent.framework.GenericMessage;
 import pl.edu.mimuw.cloudatlas.agent.framework.Message;
 
+import java.io.Serializable;
 import java.net.InetAddress;
 
-public class NetworkMessage extends Message {
+public class NetworkMessage<T extends Serializable> extends Message {
     private InetAddress target;
     private int port;
-    private Message message;
+    private GenericMessage<T> message;
 
-    public NetworkMessage(InetAddress target, int port, Message message) {
+    public NetworkMessage(InetAddress target, int port, GenericMessage<T> message) {
         this.target = target;
         this.port = port;
         this.message = message;
@@ -23,7 +25,16 @@ public class NetworkMessage extends Message {
         return port;
     }
 
-    public Message getMessage() {
+    public GenericMessage<T> getMessage() {
         return message;
+    }
+
+    @Override
+    public String toString() {
+        return "NetworkMessage{" +
+                "target=" + target +
+                ", port=" + port +
+                ", message=" + message +
+                '}';
     }
 }

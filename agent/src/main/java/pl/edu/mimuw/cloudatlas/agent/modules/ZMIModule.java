@@ -4,7 +4,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cfg4j.provider.ConfigurationProvider;
 import pl.edu.mimuw.cloudatlas.agent.framework.*;
-import pl.edu.mimuw.cloudatlas.agent.messages.*;
 import pl.edu.mimuw.cloudatlas.model.*;
 
 import java.net.InetAddress;
@@ -31,16 +30,24 @@ public class ZMIModule extends ModuleBase {
     private ZMI root;
 
     @Handler(UPDATE_ATTRIBUTES)
-    private final MessageHandler<?> h1 = new MessageHandler<AttributesMapMessage>() {
+    private final MessageHandler<?> h1 = new MessageHandler<GenericMessage<AttributesMap>>() {
         @Override
-        protected void handle(AttributesMapMessage message) {
+        protected void handle(GenericMessage<AttributesMap> message) {
             try {
                 LOGGER.debug("UPDATE_ATTRIBUTES: IN:" + message.toString());
 
-                ZMI zmi = zmiByID(root, message.getPathName());
+                ValueString zoneId = (ValueString) message.getData().getOrNull(ID);
+
+                if(zoneId == null) {
+                    throw new HandlerException("No key in attributes map");
+                }
+
+                PathName pathName = new PathName(zoneId.getValue());
+
+                ZMI zmi = zmiByID(root, pathName);
 
                 if (zmi == null) {
-                    ZMI parentZmi = zmiByID(root, message.getPathName().levelUp());
+                    ZMI parentZmi = zmiByID(root, pathName.levelUp());
                     if (parentZmi != null) {
                         zmi = new ZMI(parentZmi);
                         parentZmi.addSon(zmi);
@@ -49,19 +56,24 @@ public class ZMIModule extends ModuleBase {
                     }
                 }
 
-                for (Map.Entry<Attribute, Value> entry : message.getAttributesMap()) {
+                for (Map.Entry<Attribute, Value> entry : message.getData()) {
                     zmi.getAttributes().addOrChange(entry);
                 }
 
+                zmi.getAttributes().addOrChange(ISSUED, new ValueInt(System.currentTimeMillis()));
+
                 if (!zmi.equals(root)) {
                     ZMI father = zmi.getFather();
-                    PathName pathName = new PathName(((ValueString) father.getAttributes().get(ID)).getValue());
-                    Address responseAddress = message.getAddress();
                     Address address = new Address(InterpreterModule.class, InterpreterModule.EXEC_QUERIES);
-                    sendMessage(address, new ZMIRequestMessage(responseAddress, pathName, father));
+                    Message msg = new GenericMessage<>(father);
+                    sendMessage(address, msg);
+                    LOGGER.debug("UPDATE_ATTRIBUTES: OUT: " + msg.toString());
+
                 } else {
                     Address address = new Address(GossipModule.class, GossipModule.UPDATE_ROOT);
-                    sendMessage(address, new ZMIRequestMessage(message.getAddress(), new PathName(""), root));
+                    Message msg = new GenericMessage<>(root);
+                    sendMessage(address, msg);
+                    LOGGER.debug("UPDATE_ATTRIBUTES: OUT: " + msg.toString());
                 }
             } catch (Exception e) {
                 LOGGER.error("UPDATE_ATTRIBUTES: " + e.getMessage(), e);
@@ -70,30 +82,35 @@ public class ZMIModule extends ModuleBase {
     };
 
     @Handler(GET_ATTRIBUTES)
-    private final MessageHandler<?> h2 = new MessageHandler<PathNameRequestMessage>() {
+    private final MessageHandler<?> h2 = new MessageHandler<GenericMessage<PathName>>() {
         @Override
-        protected void handle(PathNameRequestMessage message) {
+        protected void handle(GenericMessage<PathName> message) {
 
             LOGGER.debug("GET_ATTRIBUTES: IN: " + message.toString());
 
-            ZMI zmi = zmiByID(root, message.getPathName());
+            ZMI zmi = zmiByID(root, message.getData());
             if (zmi != null) {
                 AttributesMap attributesMap = zmi.getAttributes();
-                sendMessage(message.getResponseAddress(), new AttributesMapMessage(attributesMap, message.getPathName()));
+
+                Address address = new Address(RMIModule.class, RMIModule.RESPOND_ATTRIBUTES);
+                Message msg = new GenericMessage<>(attributesMap);
+                sendMessage(address, msg);
+                LOGGER.debug("GET_ATTRIBUTES: OUT: " + msg.toString());
             }
         }
     };
 
     @Handler(GET_ZONES)
-    private final MessageHandler<?> h3 = new MessageHandler<RequestMessage>() {
+    private final MessageHandler<?> h3 = new MessageHandler<EmptyMessage>() {
         @Override
-        protected void handle(RequestMessage message) {
+        protected void handle(EmptyMessage message) {
 
             LOGGER.debug("GET_ZONES: IN: " + message.toString());
 
-            Message msg = new ZonesMessage(getZones(root));
-            sendMessage(message.getResponseAddress(), msg);
-
+            Address address = new Address(RMIModule.class, RMIModule.RESPOND_ZONES);
+            PathName[] zones = (PathName[]) getZones(root).toArray();
+            Message msg = new GenericMessage<>(zones);
+            sendMessage(address, msg);
             LOGGER.debug("GET_ZONES: OUT: " + msg.toString());
 
         }
@@ -149,17 +166,24 @@ public class ZMIModule extends ModuleBase {
     }
 
     public static ZMI zmiByID(ZMI zmi, PathName id) {
+        Boolean found;
         List<String> nameList = id.getComponents();
         PathName pathName = new PathName("");
         for(String name : nameList) {
             pathName = pathName.levelDown(name);
+            found = false;
+
             for (ZMI son : zmi.getSons()) {
                 PathName sonId = new PathName(((ValueString) son.getAttributes().get(ID)).getValue());
                 if (pathName.equals(sonId)) {
                     zmi = son;
+                    found = true;
                     break;
                 }
-                return null;
+            }
+
+            if (!found) {
+                return  null;
             }
         }
         return zmi;
