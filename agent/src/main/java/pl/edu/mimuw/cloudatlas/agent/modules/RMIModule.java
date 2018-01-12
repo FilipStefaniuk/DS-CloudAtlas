@@ -2,7 +2,8 @@ package pl.edu.mimuw.cloudatlas.agent.modules;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import pl.edu.mimuw.cloudatlas.agent.AgentRMIInterface;
+import org.cfg4j.provider.ConfigurationProvider;
+import pl.edu.mimuw.cloudatlas.agent.AgentInterface;
 import pl.edu.mimuw.cloudatlas.agent.framework.*;
 import pl.edu.mimuw.cloudatlas.agent.messages.AttributesMapMessage;
 import pl.edu.mimuw.cloudatlas.agent.messages.ContactsMessage;
@@ -19,71 +20,88 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-@Module(value = "RMIModule", unique = true, dependencies = {"ZMIModule"})
+//TODO
+// Install uninstall query
+// fix  attributes queue
+@Module(value = "RMIModule", unique = true, dependencies = {"ZMIModule", "GossipModule"})
 public class RMIModule extends ModuleBase {
 
     private static Logger LOGGER = LogManager.getLogger(RMIModule.class);
 
+    private static final String AGENT_ID_CONFIG = "Agent.agentId";
+    private static final String RMI_TIMEOUT_CONFIG = "Agent.RMIModule.rmiTimeout";
+
     private static final int RESPOND_ATTRIBUTES = 1;
     private static final int RESPOND_ZONES = 2;
 
-    private static final Long RMI_TIMEOUT = 5000L;
-
+    private Long rmiTimeout;
     private BlockingQueue<AttributesMap> attributesQueue = new LinkedBlockingQueue<>();
     private BlockingQueue<Set<PathName>> zonesQueue = new LinkedBlockingQueue<>();
 
-    private AgentRMIInterface server = new AgentRMIInterface() {
+    private AgentInterface server = new AgentInterface() {
 
         @Override
         public void setAttributes(PathName pathName, AttributesMap attributesMap) throws RemoteException {
             Address address = new Address(ZMIModule.class, ZMIModule.UPDATE_ATTRIBUTES);
             AttributesMapMessage attributesMapMessage = new AttributesMapMessage(attributesMap, pathName);
             sendMessage(address, attributesMapMessage);
+
+            LOGGER.debug("SET_ATTRIBUTES: OUT:" + attributesMapMessage.toString());
         }
 
         @Override
         public AttributesMap getAttributes(PathName pathName) throws RemoteException {
-
-            Address address = new Address(ZMIModule.class, ZMIModule.GET_ATTRIBUTES);
-            Address responseAddress = new Address(RMIModule.class, RESPOND_ATTRIBUTES);
-            sendMessage(address, new PathNameRequestMessage(responseAddress, pathName));
-
             try {
 
-                return attributesQueue.poll(RMI_TIMEOUT, TimeUnit.MILLISECONDS);
+                Address address = new Address(ZMIModule.class, ZMIModule.GET_ATTRIBUTES);
+                Address responseAddress = new Address(RMIModule.class, RESPOND_ATTRIBUTES);
+                Message message = new PathNameRequestMessage(responseAddress, pathName);
+                sendMessage(address, message);
 
-            } catch (InterruptedException e) {
+                LOGGER.debug("GET_ATTRIBUTES: OUT:" + message.toString());
+
+                return attributesQueue.poll(rmiTimeout, TimeUnit.MILLISECONDS);
+
+            } catch (Exception e) {
+                LOGGER.error("GET_ATTRIBUTES: " + e.getMessage(), e);
                 throw new RemoteException();
             }
         }
 
         @Override
-        public void installQuery(Attribute attribute, ValueString value) throws RemoteException {}
+        public void installQuery(Attribute attribute, ValueString value) throws RemoteException {
+        }
 
         @Override
-        public void uninstallQuery(Attribute attribute) throws RemoteException {}
+        public void uninstallQuery(Attribute attribute) throws RemoteException {
+        }
 
         @Override
         public Set<PathName> getAgentZones() throws RemoteException {
 
-            Address address = new Address(ZMIModule.class, ZMIModule.GET_ZONES);
-            Address responseAddress = new Address(RMIModule.class, RESPOND_ZONES);
-            sendMessage(address, new RequestMessage(responseAddress));
-
             try {
 
-                return zonesQueue.poll(RMI_TIMEOUT, TimeUnit.MILLISECONDS);
+                Address address = new Address(ZMIModule.class, ZMIModule.GET_ZONES);
+                Address responseAddress = new Address(RMIModule.class, RESPOND_ZONES);
+                Message message = new RequestMessage(responseAddress);
+                sendMessage(address, message);
 
-            } catch (InterruptedException e) {
+                LOGGER.debug("GET_AGENT_ZONES: OUT: " + message.toString());
+
+                return zonesQueue.poll(rmiTimeout, TimeUnit.MILLISECONDS);
+
+            } catch (Exception e) {
+                LOGGER.error("GET_AGENT_ZONES: OUT: " + e.getMessage(), e);
                 throw new RemoteException();
             }
         }
 
         @Override
         public void setFallbackContacts(Set<ValueContact> contacts) throws RemoteException {
-            Address address = new Address(ZMIModule.class, ZMIModule.SET_FALLBACK_CONTACTS);
+            Address address = new Address(ZMIModule.class, GossipModule.SET_FALLBACK_CONTACTS);
             ContactsMessage contactsMessage = new ContactsMessage(contacts);
             sendMessage(address, contactsMessage);
+            LOGGER.debug("SET_FALLBACK_CONTACTS: OUT: " + contactsMessage.toString());
         }
     };
 
@@ -91,13 +109,14 @@ public class RMIModule extends ModuleBase {
     private final MessageHandler<?> h1 = new MessageHandler<AttributesMapMessage>() {
         @Override
         protected void handle(AttributesMapMessage message) {
-
-            LOGGER.debug("RESPOND_ATTRIBUTES handler.");
-
             try {
+
+                LOGGER.debug("RESPOND_ATTRIBUTES: IN: " + message.toString());
+
                 attributesQueue.put(message.getAttributesMap());
-            } catch (InterruptedException e) {
-                LOGGER.error("Failed to respond with Attributes.", e);
+
+            } catch (Exception e) {
+                LOGGER.error("RESPOND_ATTRIBUTES: " + e.getMessage(), e);
             }
         }
     };
@@ -106,28 +125,32 @@ public class RMIModule extends ModuleBase {
     private final MessageHandler<?> h2 = new MessageHandler<ZonesMessage>() {
         @Override
         protected void handle(ZonesMessage message) {
-
-            LOGGER.debug("RESPOND_ZONES handler.");
-
             try {
+
+                LOGGER.debug("RESPOND_ZONES: IN:" + message.toString());
+
                 zonesQueue.put(message.getZones());
-            } catch (InterruptedException e) {
-                LOGGER.error("Failed to respond with Zones.", e);
+
+            } catch (Exception e) {
+                LOGGER.error("RESPOND_ZONES: " + e.getMessage(), e);
             }
         }
     };
 
-    public RMIModule() {
+    @Override
+    public void initialize(ConfigurationProvider configurationProvider) {
+
+        String agentId = configurationProvider.getProperty("Agent.agentId", String.class);
+        rmiTimeout = configurationProvider.getProperty("Agent.RMIModule.rmiTimeout", Long.class);
 
         if (System.getSecurityManager() == null) {
             System.setSecurityManager(new SecurityManager());
         }
 
         try {
-
-            AgentRMIInterface stub = (AgentRMIInterface) UnicastRemoteObject.exportObject(server, 0);
+            AgentInterface stub = (AgentInterface) UnicastRemoteObject.exportObject(server, 0);
             Registry registry = LocateRegistry.getRegistry();
-            registry.rebind("Agent", stub);
+            registry.rebind(agentId, stub);
 
         } catch (RemoteException e) {
             LOGGER.error("RMI module error", e);

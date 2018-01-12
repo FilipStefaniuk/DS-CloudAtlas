@@ -1,111 +1,64 @@
-//package pl.edu.mimuw.cloudatlas.agent;
-//
-//import pl.edu.mimuw.cloudatlas.interpreter.InterpreterMain;
-//import pl.edu.mimuw.cloudatlas.model.*;
-//
-//import java.rmi.RemoteException;
-//import java.util.HashSet;
-//import java.util.Set;
-//
-//public class Agent implements AgentRMIInterface {
-//
-//    private ZMI root;
-//    private Set<ValueContact> fallbackContacts;
-//
-//
-//    public Agent() throws Exception {
-//        root = InterpreterMain.createDefaultInterpreterHierarchy();
-//        fallbackContacts = new HashSet<>();
-//    }
-//
-//    ZMI getZMIByPathName(PathName pathName) throws Exception{
-//
-//        ZMI result = root;
-//        Boolean isNew = false;
-//
-//        for(String name : pathName.getComponents()) {
-//            for(ZMI son : result.getSons()) {
-//                if (((ValueString) son.getAttributes().get("name")).getValue().equals(name)) {
-//                    result = son;
-//                    isNew = true;
-//                    break;
-//                }
-//            }
-//
-//            if(!isNew)
-//                throw new Exception();
-//
-//            isNew = false;
-//
-//        }
-//        return result;
-//    }
-//
-//    public void update() throws Exception {
-//        try {
-//            InterpreterMain.execute(root);
-//        } catch (Exception e) {}
-//    }
-//
-//    @Override
-//    public AttributesMap getAttributes(PathName pathName) throws RemoteException {
-//        try {
-//            return getZMIByPathName(pathName).getAttributes();
-//        } catch (Exception e) {
-//            throw new RemoteException();
-//        }
-//    }
-//
-//    @Override
-//    public void setAttribute(PathName pathName, Attribute attribute, Value value) throws RemoteException{
-//        try {
-//            ZMI zmi = getZMIByPathName(pathName);
-//            if (!zmi.getSons().isEmpty())
-//                throw new Exception();
-//            zmi.getAttributes().addOrChange(attribute, value);
-//        } catch (Exception e) {
-//            throw new RemoteException();
-//        }
-//    }
-//
-//    @Override
-//    public void installQuery(Attribute attribute, ValueString value) throws RemoteException {
-//        try {
-//            InterpreterMain.installQuery(root, attribute, value);
-//        } catch (Exception e) {
-//            throw new RemoteException();
-//        }
-//    }
-//
-//
-//    @Override
-//    public void uninstallQuery(Attribute attribute) throws RemoteException {
-//        try {
-//            InterpreterMain.uninstallQuery(root, attribute);
-//        } catch (Exception e) {
-//            throw new RemoteException();
-//        }
-//    }
-//
-//    @Override
-//    public Set<PathName> getAgentZones() throws RemoteException {
-//        return getNames(root);
-//    }
-//
-//    private Set<PathName> getNames(ZMI zmi) {
-//
-//        Set<PathName> pathNames = new HashSet<>();
-//        pathNames.add(InterpreterMain.getPathName(zmi));
-//
-//        if (!zmi.getSons().isEmpty())
-//            for(ZMI son : zmi.getSons())
-//                pathNames.addAll(getNames(son));
-//
-//        return pathNames;
-//    }
-//
-//    @Override
-//    public void setFallbackContacts(Set<ValueContact> contacts) throws RemoteException {
-//        fallbackContacts = contacts;
-//    }
-//}
+package pl.edu.mimuw.cloudatlas.agent;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.cfg4j.provider.ConfigurationProvider;
+import org.cfg4j.provider.ConfigurationProviderBuilder;
+import org.cfg4j.source.classpath.ClasspathConfigurationSource;
+import pl.edu.mimuw.cloudatlas.agent.fetcher.Fetcher;
+import pl.edu.mimuw.cloudatlas.agent.framework.Address;
+import pl.edu.mimuw.cloudatlas.agent.framework.EventQueue;
+import pl.edu.mimuw.cloudatlas.agent.framework.Message;
+import pl.edu.mimuw.cloudatlas.agent.messages.EmptyMessage;
+import pl.edu.mimuw.cloudatlas.agent.modules.*;
+
+import java.nio.file.Paths;
+
+public class Agent {
+
+    private static final Logger LOGGER = LogManager.getLogger(Agent.class);
+
+    public static final String DEFAULT_CONFIGURATION = "cloudatlas.properties";
+
+    public static void main(String[] args) throws Exception {
+
+        String configurationFile;
+        if (args.length > 0) {
+            configurationFile = args[0];
+        } else {
+            configurationFile = DEFAULT_CONFIGURATION;
+        }
+
+        ConfigurationProvider configurationProvider = new ConfigurationProviderBuilder()
+                .withConfigurationSource(new ClasspathConfigurationSource(() -> Paths.get(configurationFile)))
+                .build();
+
+        String agentId = configurationProvider.getProperty("Agent.agentId", String.class);
+        Integer port = configurationProvider.getProperty("Agent.port", Integer.class);
+
+        LOGGER.info("START: id = " + agentId + " port " + port.toString());
+
+        EventQueue eq = EventQueue.builder(configurationFile)
+                .executor(RMIModule.class)
+                .executor(ZMIModule.class)
+                .executor(GossipModule.class)
+                .executor(InterpreterModule.class)
+                .executor(CommunicationModule.class)
+                .executor(TimerModule.class)
+                .build();
+
+        Message message = new EmptyMessage();
+        message.setAddress(new Address(GossipModule.class, GossipModule.INIT_GOSSIP));
+        eq.sendMessage(message);
+
+        eq.start();
+
+        String classpath = System.getProperty("java.class.path");
+        ProcessBuilder processBuilder = new ProcessBuilder("java", "-cp", classpath, Fetcher.class.getName(), configurationFile);
+        Process process = processBuilder.start();
+
+        process.waitFor();
+
+        System.out.println("Exit");
+    }
+}

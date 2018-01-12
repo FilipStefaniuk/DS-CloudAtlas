@@ -146,36 +146,30 @@ public class PathName implements Serializable {
 		}
 	}
 
-	/**
-	 * Finds ZMI with the current path given root
-	 *
-	 * @param root a root ZMI
-	 * @return Null if there is no ZMI with path
-	 */
-	public ZMI findZMI(ZMI root) {
+	public static PathName getLCA(PathName pathName1, PathName pathName2) {
 
-		if (root == null) {
-			return null;
-		}
+		int sizeDiff = Math.abs(pathName1.components.size() - pathName2.components.size());
 
-		Integer index = 0;
-		ZMI zmi = root;
-		Boolean stop = false;
-
-		while (components.size() > index && !stop) {
-			stop = true;
-			for (ZMI son : zmi.getSons()) {
-				if (((ValueString) son.getAttributes().get("name")).getValue().equals(components.get(index))) {
-					index++;
-					zmi = son;
-					stop = false;
-					break;
-				}
+		for (int i = 0; i < sizeDiff; ++i) {
+			if (pathName1.components.size() > pathName2.components.size()) {
+				pathName1 = pathName1.levelUp();
+			} else if (pathName1.components.size() < pathName2.components.size()) {
+				pathName2 = pathName2.levelUp();
 			}
 		}
 
-		return stop ? null : zmi;
+		while (!pathName1.equals(PathName.ROOT) && !pathName2.equals(PathName.ROOT)) {
+				if (pathName1.equals(pathName2)) {
+					return new PathName(pathName1.toString());
+				}
+
+				pathName1 = pathName1.levelUp();
+				pathName2 = pathName2.levelUp();
+		}
+
+		return PathName.ROOT;
 	}
+
 	
 	/**
 	 * Returns a hash code value for this object. This method returns a hash code of a string representing full path

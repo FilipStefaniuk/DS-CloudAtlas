@@ -1,4 +1,4 @@
-package pl.edu.mimuw.cloudatlas.fetcher;
+package pl.edu.mimuw.cloudatlas.agent.fetcher;
 
 import com.sun.management.OperatingSystemMXBean;
 import pl.edu.mimuw.cloudatlas.model.AttributesMap;

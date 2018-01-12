@@ -2,6 +2,7 @@ package pl.edu.mimuw.cloudatlas.agent.modules;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cfg4j.provider.ConfigurationProvider;
 import pl.edu.mimuw.cloudatlas.agent.framework.Handler;
 import pl.edu.mimuw.cloudatlas.agent.framework.MessageHandler;
 import pl.edu.mimuw.cloudatlas.agent.framework.Module;
@@ -29,7 +30,7 @@ public class InterpreterModule extends ModuleBase{
         @Override
         protected void handle(ZMIRequestMessage message) {
 
-            LOGGER.debug("EXEC_QUERIES handler: " + message.getPathName().toString());
+            LOGGER.debug("EXEC_QUERIES: IN: " + message.toString());
 
             try {
                 Interpreter interpreter = new Interpreter(message.getZmi());
@@ -50,8 +51,11 @@ public class InterpreterModule extends ModuleBase{
                 sendMessage(message.getResponseAddress(), new AttributesMapMessage(attributesMap, message.getPathName()));
 
             } catch (Exception e) {
-                LOGGER.error("Failed to execute queries.", e);
+                LOGGER.error("EXEC_QUERIES: " + e.getMessage(), e);
             }
         }
     };
+
+    @Override
+    public void initialize(ConfigurationProvider configurationProvider) {}
 }

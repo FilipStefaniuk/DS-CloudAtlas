@@ -1,7 +1,7 @@
 package pl.edu.mimuw.cloudatlas.client;
 
 import com.google.gson.Gson;
-import pl.edu.mimuw.cloudatlas.agent.AgentRMIInterface;
+import pl.edu.mimuw.cloudatlas.agent.AgentInterface;
 import pl.edu.mimuw.cloudatlas.model.Attribute;
 import pl.edu.mimuw.cloudatlas.model.AttributesMap;
 import pl.edu.mimuw.cloudatlas.model.PathName;
@@ -32,7 +32,7 @@ public class ListAttributesServlet extends HttpServlet {
 
         try {
             Registry registry = LocateRegistry.getRegistry("localhost");
-            AgentRMIInterface stub = (AgentRMIInterface) registry.lookup("Agent");
+            AgentInterface stub = (AgentInterface) registry.lookup("Agent");
             AttributesMap attributes = stub.getAttributes(new PathName(name));
 
 

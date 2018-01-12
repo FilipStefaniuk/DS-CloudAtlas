@@ -12,7 +12,11 @@
     <artifactId>agent</artifactId>
 
     <dependencies>
-        <!-- https://mvnrepository.com/artifact/commons-lang/commons-lang -->
+        <dependency>
+            <groupId>org.cfg4j</groupId>
+            <artifactId>cfg4j-core</artifactId>
+            <version>4.4.0</version>
+        </dependency>
         <dependency>
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>
@@ -66,6 +70,11 @@
             <version>4.12</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.7</version>
+        </dependency>
     </dependencies>
 
 
@@ -92,7 +101,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>pl.edu.mimuw.cloudatlas.agent.AgentServer</mainClass>
+                            <mainClass>pl.edu.mimuw.cloudatlas.agent.Agent</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

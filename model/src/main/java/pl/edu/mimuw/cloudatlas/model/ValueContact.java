@@ -35,6 +35,7 @@ import java.net.InetAddress;
 public class ValueContact extends Value {
 	private final PathName name;
 	private final InetAddress address;
+	private final Integer port;
 	
 	/**
 	 * Constructs a new <code>ValueContact</code> with the specified path name and IP address.
@@ -42,14 +43,15 @@ public class ValueContact extends Value {
 	 * @param name the full path name of a node
 	 * @param address the IP address of the node
 	 */
-	public ValueContact(PathName name, InetAddress address) {
+	public ValueContact(PathName name, InetAddress address, Integer port) {
 		this.name = name;
 		this.address = address;
+		this.port = port;
 	}
 	
 	@Override
 	public Value getDefaultValue() {
-		return new ValueContact(null, null);
+		return new ValueContact(null, null, null);
 	}
 	
 	/**
@@ -69,7 +71,11 @@ public class ValueContact extends Value {
 	public InetAddress getAddress() {
 		return address;
 	}
-	
+
+	public Integer getPort() {
+		return port;
+	}
+
 	@Override
 	public Type getType() {
 		return TypePrimitive.CONTACT;
@@ -84,7 +90,7 @@ public class ValueContact extends Value {
 				if(isNull())
 					return ValueString.NULL_STRING;
 				else
-					return new ValueString("(" + name.toString() + ", " + address.toString() + ")");
+					return new ValueString("(" + name.toString() + ", " + address.toString() + ", " + port.toString() + ")");
 			default:
 				throw new UnsupportedConversionException(getType(), type);
 		}
@@ -92,6 +98,6 @@ public class ValueContact extends Value {
 	
 	@Override
 	public boolean isNull() {
-		return name == null || address == null;
+		return name == null || address == null || port == null;
 	}
 }

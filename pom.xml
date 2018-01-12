@@ -19,7 +19,6 @@
         <module>model</module>
         <module>interpreter</module>
         <module>agent</module>
-        <module>fetcher</module>
         <module>client</module>
 
     </modules>

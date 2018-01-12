@@ -150,7 +150,7 @@ public class InterpreterMain {
             throws UnknownHostException {
         return new ValueContact(new PathName(path), InetAddress.getByAddress(new byte[] {
                 ip1, ip2, ip3, ip4
-        }));
+        }), 0);
     }
 
     public static ZMI createDefaultInterpreterHierarchy() {

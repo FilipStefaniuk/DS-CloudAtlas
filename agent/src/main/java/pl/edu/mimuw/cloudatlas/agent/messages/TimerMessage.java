@@ -1,22 +1,28 @@
 package pl.edu.mimuw.cloudatlas.agent.messages;
 
-import pl.edu.mimuw.cloudatlas.agent.framework.Address;
-import pl.edu.mimuw.cloudatlas.agent.framework.RequestMessage;
+import pl.edu.mimuw.cloudatlas.agent.framework.Message;
 
-public class TimerMessage extends RequestMessage {
-    private Integer id;
+public class TimerMessage extends Message {
+    private Long id;
+    private String author;
     private Long startTime;
     private Long delay;
+    private Message message;
 
-    public TimerMessage(Address responseAddress, Integer id, Long startTime, Long delay) {
-        super(responseAddress);
+    public TimerMessage(Long id, String author, Long startTime, Long delay, Message message) {
         this.id = id;
+        this.author = author;
         this.startTime = startTime;
         this.delay = delay;
+        this.message = message;
     }
 
-    public Integer getId() {
+    public Long getId() {
         return id;
+    }
+
+    public String getAuthor() {
+        return author;
     }
 
     public Long getStartTime() {
@@ -25,5 +31,9 @@ public class TimerMessage extends RequestMessage {
 
     public Long getDelay() {
         return delay;
+    }
+
+    public Message getMessage() {
+        return message;
     }
 }

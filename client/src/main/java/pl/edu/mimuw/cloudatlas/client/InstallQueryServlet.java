@@ -1,6 +1,6 @@
 package pl.edu.mimuw.cloudatlas.client;
 
-import pl.edu.mimuw.cloudatlas.agent.AgentRMIInterface;
+import pl.edu.mimuw.cloudatlas.agent.AgentInterface;
 import pl.edu.mimuw.cloudatlas.model.Attribute;
 import pl.edu.mimuw.cloudatlas.model.ValueString;
 
@@ -28,7 +28,7 @@ public class InstallQueryServlet extends HttpServlet {
 
         try {
             Registry registry = LocateRegistry.getRegistry("localhost", 1324);
-            AgentRMIInterface stub = (AgentRMIInterface) registry.lookup("Agent");
+            AgentInterface stub = (AgentInterface) registry.lookup("Agent");
             stub.installQuery(new Attribute('&' + name), new ValueString(value));
 
         } catch (NotBoundException e) {

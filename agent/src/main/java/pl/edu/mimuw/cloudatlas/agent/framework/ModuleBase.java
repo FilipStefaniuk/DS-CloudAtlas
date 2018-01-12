@@ -1,6 +1,7 @@
 package pl.edu.mimuw.cloudatlas.agent.framework;
 
 import org.apache.commons.lang.SerializationUtils;
+import org.cfg4j.provider.ConfigurationProvider;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -26,7 +27,8 @@ abstract public class ModuleBase {
             this.eventQueue = eventQueue;
         }
 
-        ModuleBase createModule(Class<? extends ModuleBase> clazz) throws InternalError, IllegalArgumentException {
+        ModuleBase createModule(Class<? extends ModuleBase> clazz, ConfigurationProvider configurationProvider)
+                throws InternalError, IllegalArgumentException {
 
             Module annotation = clazz.getAnnotation(Module.class);
 
@@ -60,6 +62,8 @@ abstract public class ModuleBase {
                     }
                 }
 
+                object.initialize(configurationProvider);
+
                 return object;
 
             } catch (InstantiationException | IllegalAccessException e) {
@@ -70,7 +74,9 @@ abstract public class ModuleBase {
 
     protected ModuleBase () {}
 
-    String getName() {
+    public abstract void initialize(ConfigurationProvider configurationProvider);
+
+    protected String getName() {
         return name;
     }
 

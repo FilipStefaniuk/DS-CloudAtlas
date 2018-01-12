@@ -9,7 +9,7 @@
         <Root level="INFO">
             <AppenderRef ref="Console"/>
         </Root>
-        <logger name="pl.edu.mimuw.cloudatlas.agent.modules" level="DEBUG" additivity="false">
+        <logger name="pl.edu.mimuw.cloudatlas.agent.modules.GossipModule" level="DEBUG" additivity="false">
             <AppenderRef ref="Console"/>
         </logger>
 

@@ -2,7 +2,12 @@ package pl.edu.mimuw.cloudatlas.agent.framework;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cfg4j.provider.ConfigurationProvider;
+import org.cfg4j.provider.ConfigurationProviderBuilder;
+import org.cfg4j.source.ConfigurationSource;
+import org.cfg4j.source.classpath.ClasspathConfigurationSource;
 
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -17,18 +22,25 @@ public class EventQueue {
 
     private static Logger LOGGER = LogManager.getLogger(EventQueue.class);
 
-    public static Builder builder() {
-        return new EventQueue.Builder();
+    public static Builder builder(String configuration) {
+        return new EventQueue.Builder(configuration);
     }
 
     public static class Builder {
-
         private EventQueue eventQueue = new EventQueue();
         private Map<String, Class<? extends ModuleBase>> registeredModules = new HashMap<>();
         private Set<String> dependencies = new HashSet<>();
         private ModuleBase.ModuleFactory moduleFactory = ModuleBase.moduleFacotry(eventQueue);
+        private ConfigurationProvider config;
 
-        private Builder() {}
+        private Builder(String configuration) {
+
+            ConfigurationSource source = new ClasspathConfigurationSource(() -> Paths.get(configuration));
+
+            config = new ConfigurationProviderBuilder()
+                    .withConfigurationSource(source)
+                    .build();
+        }
 
         @SafeVarargs
         public final Builder executor(Class<? extends ModuleBase> ... modules) throws IllegalStateException, IllegalArgumentException {
@@ -39,7 +51,7 @@ public class EventQueue {
 
             for (Class<? extends ModuleBase> module : Arrays.stream(modules).distinct().collect(Collectors.toList())) {
 
-                ModuleBase object = moduleFactory.createModule(module);
+                ModuleBase object = moduleFactory.createModule(module, config);
 
                 if (registeredModules.containsKey(object.getName())) {
                     if (!registeredModules.get(object.getName()).equals(module)) {
@@ -114,13 +126,13 @@ public class EventQueue {
             t.start();
         }
 
-        try {
-            for (Thread t : threads) {
-                t.join();
-            }
-        } catch (InterruptedException e) {
-            LOGGER.error("Message queue interrupted.", e);
-        }
+//        try {
+//            for (Thread t : threads) {
+//                t.join();
+//            }
+//        } catch (InterruptedException e) {
+//            LOGGER.error("Message queue interrupted.", e);
+//        }
     }
 
     public UUID getId() {

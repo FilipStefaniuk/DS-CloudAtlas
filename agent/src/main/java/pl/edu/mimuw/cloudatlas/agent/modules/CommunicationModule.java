@@ -3,15 +3,17 @@ package pl.edu.mimuw.cloudatlas.agent.modules;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cfg4j.provider.ConfigurationProvider;
 import pl.edu.mimuw.cloudatlas.agent.framework.*;
+import pl.edu.mimuw.cloudatlas.agent.messages.IdMessage;
 import pl.edu.mimuw.cloudatlas.agent.messages.NetworkMessage;
+import pl.edu.mimuw.cloudatlas.agent.messages.TimerMessage;
 
-import java.io.*;
+import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -23,17 +25,18 @@ public class CommunicationModule extends ModuleBase {
 
     private static Logger LOGGER = LogManager.getLogger(CommunicationModule.class);
 
-    private static final Integer PORT = 19911;
-
-    private static final Integer HEADER_SIZE = 24;
-    private static final Integer PACKET_SIZE = 10;
+    private static final Integer HEADER_SIZE = 32;
+    private static final Integer PACKET_SIZE = 500;
 
     public static final int SEND = 1;
+    public static final int CLEAR = 2;
 
+    private Integer port;
     private Long nextId = 0L;
+    private Long clearDelay;
+    private Long retryConnectDelay;
     private ConcurrentHashMap<PartialMessageId, PartialMessage> partialMessages = new ConcurrentHashMap<>();
     private BlockingQueue<NetworkMessage> toSendQueue = new LinkedBlockingQueue<>();
-
 
     @Handler(SEND)
     private final MessageHandler<?> h1 = new MessageHandler<NetworkMessage>() {
@@ -41,12 +44,28 @@ public class CommunicationModule extends ModuleBase {
         protected void handle(NetworkMessage message) {
             try {
 
-//                LOGGER.debug("SEND handler " + ((IdMessage) message.getMessage()).getId());
+                LOGGER.debug("SEND: IN: " + message.toString());
 
                 toSendQueue.put(message);
 
-            } catch (InterruptedException e) {
-                LOGGER.error("Failed to send message.", e);
+            } catch (Exception e) {
+                LOGGER.error("SEND: " + e.getMessage(), e);
+            }
+        }
+    };
+
+    @Handler(CLEAR)
+    private final MessageHandler<?> h2 = new MessageHandler<IdMessage>() {
+        @Override
+        protected void handle(IdMessage message) {
+            try {
+
+                LOGGER.debug("CLEAR: IN: " + message.toString());
+
+                partialMessages.remove(message.getId());
+
+            } catch (Exception e) {
+                LOGGER.error("CLEAR: " + e.getMessage(), e);
             }
         }
     };
@@ -55,10 +74,9 @@ public class CommunicationModule extends ModuleBase {
 
         @Override
         public void run() {
-            try {
+            while (true) {
 
-                while (true) {
-
+                try {
                     NetworkMessage msg = toSendQueue.take();
                     InetSocketAddress address = new InetSocketAddress(msg.getTarget(), msg.getPort());
 
@@ -72,10 +90,12 @@ public class CommunicationModule extends ModuleBase {
 
                         int offset = i*PACKET_SIZE;
                         int length = Math.min(PACKET_SIZE, bytes.length - offset);
+                        long timestamp = System.currentTimeMillis();
 
                         ByteBuffer buffer = ByteBuffer.allocate(PACKET_SIZE + HEADER_SIZE)
                                 .putLong(getEventQueueId().getMostSignificantBits())
                                 .putLong(messageId)
+                                .putLong(timestamp)
                                 .putInt(i)
                                 .putInt(count)
                                 .put(ByteBuffer.wrap(bytes, offset, length));
@@ -84,12 +104,9 @@ public class CommunicationModule extends ModuleBase {
                         channel.send(buffer, address);
                     }
 
-//                    NetworkMessage networkMessage = new NetworkMessage(localhost, PORT, new IdMessage(2137));
-//                    sendMessage(new Address(CommunicationModule.class, SEND), networkMessage);
+                } catch (Exception e) {
+                    LOGGER.error("SENDER: " + e.getMessage(), e);
                 }
-
-            } catch (IOException | InterruptedException e) {
-                LOGGER.warn("Failed to send message.", e);
             }
         }
     });
@@ -100,60 +117,99 @@ public class CommunicationModule extends ModuleBase {
 
         @Override
         public void run() {
-            try {
-                channel = DatagramChannel.open();
-                channel.socket().bind(new InetSocketAddress(PORT));
+            while(true) {
+                try {
 
-                while (true) {
+                    LOGGER.debug("RECEIVER: Binding new socket.");
+                    channel = DatagramChannel.open();
+                    channel.socket().bind(new InetSocketAddress(port));
 
-                    ByteBuffer buffer = ByteBuffer.allocate(HEADER_SIZE + PACKET_SIZE);
+                    while (true) {
 
-                    channel.receive(buffer);
-                    buffer.flip();
+                        ByteBuffer buffer = ByteBuffer.allocate(HEADER_SIZE + PACKET_SIZE);
 
-                    long eqId = buffer.getLong();
-                    long msgId = buffer.getLong();
-                    int nr = buffer.getInt();
-                    int count = buffer.getInt();
+                        channel.receive(buffer);
+                        buffer.flip();
 
-                    byte[] bytes = new byte[buffer.remaining()];
-                    buffer.get(bytes);
+                        long timestamp_rcv = System.currentTimeMillis();
 
-                    byte[] messageBytes = null;
+                        long eqId = buffer.getLong();
+                        long msgId = buffer.getLong();
+                        long timestamp_snd = buffer.getLong();
+                        int nr = buffer.getInt();
+                        int count = buffer.getInt();
 
-                    if (count == 1) {
-                        messageBytes = bytes;
-                    } else {
-                        PartialMessageId messageId = new PartialMessageId(eqId, msgId);
-                        PartialMessage partialMessage = partialMessages.get(messageId);
+                        byte[] bytes = new byte[buffer.remaining()];
+                        buffer.get(bytes);
 
-                        if (partialMessage == null) {
-                            partialMessage = new PartialMessage(count);
-                            partialMessages.put(messageId, partialMessage);
+                        byte[] messageBytes = null;
+
+                        if (count == 1) {
+                            messageBytes = bytes;
+                        } else {
+                            PartialMessageId messageId = new PartialMessageId(eqId, msgId);
+                            PartialMessage partialMessage = partialMessages.get(messageId);
+
+                            if (partialMessage == null) {
+                                Long timerId = nextId++;
+                                partialMessage = new PartialMessage(count, timerId, timestamp_snd, timestamp_rcv);
+                                partialMessages.put(messageId, partialMessage);
+
+                                Message timerMsg = new IdMessage(messageId);
+                                timerMsg.setAddress(new Address(CommunicationModule.class, CLEAR));
+                                Message msg = new TimerMessage(timerId, getName(),
+                                        System.currentTimeMillis(), clearDelay, timerMsg);
+                                Address address = new Address(TimerModule.class, TimerModule.SCHEDULE);
+                                sendMessage(address, msg);
+                                LOGGER.debug("RECEIVER: OUT: " + msg.toString());
+                            }
+
+                            partialMessage.addPartialData(new PartialData(nr, bytes));
+
+                            if (partialMessage.isReady()) {
+                                partialMessages.remove(messageId);
+                                messageBytes = partialMessage.buildMessage();
+                                Long timerId = partialMessage.getTimerId();
+
+                                Message msg = new TimerMessage(timerId, getName(), null, null, null);
+                                Address address = new Address(TimerModule.class, TimerModule.CANCEL);
+                                sendMessage(address, msg);
+                                LOGGER.debug("RECEIVER: OUT: " + msg.toString());
+                            }
                         }
 
-                        partialMessage.addPartialData(new PartialData(nr, bytes));
-
-                        if (partialMessage.isReady()) {
-                            partialMessages.remove(messageId);
-                            messageBytes = partialMessage.buildMessage();
+                        if (messageBytes != null) {
+                            Message msg = (Message) SerializationUtils.deserialize(messageBytes);
+                            sendMessage(msg.getAddress(), msg);
+                            LOGGER.debug("RECEIVER: OUT: " + msg.toString());
                         }
                     }
-
-                    if (messageBytes != null) {
-                        Message msg = (Message) SerializationUtils.deserialize(messageBytes);
-                        sendMessage(msg.getAddress(), msg);
-                    }
+                } catch (Exception e) {
+                    LOGGER.error("RECEIVER: " + e.getMessage(), e);
                 }
-            } catch (IOException e) {}
+
+                try {
+                    Thread.sleep(retryConnectDelay);
+                } catch (Exception e) {
+                    LOGGER.error("RECEIVER: " + e.getMessage(), e);
+                }
+            }
         }
     });
 
-    public CommunicationModule() {
+    @Override
+    public void initialize(ConfigurationProvider configurationProvider) {
+        port = configurationProvider.getProperty("Agent.port", Integer.class);
+        clearDelay = configurationProvider.getProperty("Agent.CommunicationModule.clearDelay", Long.class);
+        retryConnectDelay = configurationProvider.getProperty("Agent.CommunicationModule.retryBindSocketDelay", Long.class);
 
         sender.start();
         receiver.start();
     }
+
+    /*********************************************************************************************
+                                            Subclasses
+     ********************************************************************************************/
 
     public static class PartialData implements Comparable<PartialData> {
         private Integer number;
@@ -174,7 +230,7 @@ public class CommunicationModule extends ModuleBase {
         }
     }
 
-    public static class PartialMessageId {
+    public static class PartialMessageId implements Serializable {
         Long SenderId;
         Long MessageId;
 
@@ -205,9 +261,15 @@ public class CommunicationModule extends ModuleBase {
     public static class PartialMessage {
         private Integer requiredPackets;
         private List<PartialData> partialDataList = new ArrayList<>();
+        private Long timerId;
+        private Long timestamp_snd;
+        private Long timestamp_rcv;
 
-        public PartialMessage(Integer totalPackets) {
+        public PartialMessage(Integer totalPackets, Long timerId, Long time_snd, Long time_rcv) {
             this.requiredPackets = totalPackets;
+            this.timerId = timerId;
+            this.timestamp_snd = time_snd;
+            this.timestamp_rcv = time_rcv;
         }
 
         public void addPartialData(PartialData partialData) {
@@ -226,6 +288,18 @@ public class CommunicationModule extends ModuleBase {
                     bytes.put(data.getBytes());
                 }
                 return bytes.array();
+        }
+
+        public Long getTimerId() {
+            return timerId;
+        }
+
+        public Long getTimestamp_snd() {
+            return timestamp_snd;
+        }
+
+        public Long getTimestamp_rcv() {
+            return timestamp_rcv;
         }
     }
 }
