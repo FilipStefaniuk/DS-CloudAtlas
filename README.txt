@@ -58,7 +58,7 @@ Brakujące rzeczy:
 	- Brak frontendu do setContacts
     - Brak wykresu
 
-    Przepisałem klienta tak żeby działał przy wykożystaniu Spring Boot, dzięki temu nie trzeba importować
+    Przepisałem klienta tak żeby działał przy wykorzystaniu Spring Boot, dzięki temu nie trzeba importować
     spakowanego pliku .war do serwera, wszystko jest w wykonywalnym pliku .jar Klient może teraz też komunikować
     się z różnymi agentami - robi to poprzez sprawdzanie rmi registry.
 
