@@ -53,7 +53,12 @@ $(document).ready(function () {
                 for(var key in data) {
                     if (data[key] !== "") {
                         if (key.substring(0, 1) === '&') {
-                            table2.append('<tr><td>' + key + '</td><td>' + data[key] + '</td><td><button class="btn btn-default" onclick="uninstallQuery(\'' + key + '\')">Delete</button></td></tr>');
+                            var tr = '<tr><td>' + key + '</td><td>' + data[key] + '</td><td>';
+                            if (key !== "&nmembers" && key !== "&contacts") {
+                                tr += '<button class="btn btn-default" onclick="uninstallQuery(\'' + key + '\')">Delete</button>';
+                            }
+                            tr += '</td></tr>'
+                            table2.append(tr);
                         } else {
                             table.append('<tr class="clickable-row"><td>' + key + '</td><td>' + data[key] + '</td></tr>');
                         }

@@ -145,6 +145,13 @@ public class ZMIModule extends ModuleBase {
                 LOGGER.debug("ADD_OR_CHANGE_ATTRIBUTES: IN: " + message.toString());
 
                 for (Map.Entry<Attribute, Value> entry : message.getData()) {
+                    if (entry.getKey().getName().startsWith("&")) {
+                        ValueQuery query = (ValueQuery) singleton.getAttributes().getOrNull(entry.getKey());
+                        if (query != null && query.getIssued() > ((ValueQuery)entry.getValue()).getIssued()) {
+                            continue;
+                        }
+                    }
+
                     singleton.getAttributes().addOrChange(entry);
                 }
 

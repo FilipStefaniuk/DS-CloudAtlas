@@ -40,6 +40,10 @@ public class ValueQuery extends Value implements Serializable {
         return publicSignature.verify(signature);
     }
 
+    public Long getIssued() {
+        return issued;
+    }
+
     public String getName() {
         return name;
     }
