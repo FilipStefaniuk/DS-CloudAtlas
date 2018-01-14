@@ -365,4 +365,14 @@ public class InterpreterTest {
 
 //		System.out.print(result);
 	}
+
+	@Test
+	public void query20Test() throws Exception {
+		ValueString query = new ValueString("SELECT random(2, distinct(unfold(contacts))) AS contacts");
+		InterpreterMain.installQuery(root, attribute, query);
+		String result = InterpreterMain.execute(root);
+
+		System.out.print(result);
+	}
+
 }

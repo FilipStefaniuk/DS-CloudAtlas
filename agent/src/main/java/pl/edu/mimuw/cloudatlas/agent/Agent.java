@@ -6,11 +6,12 @@ import org.cfg4j.provider.ConfigurationProvider;
 import org.cfg4j.provider.ConfigurationProviderBuilder;
 import org.cfg4j.source.classpath.ClasspathConfigurationSource;
 import pl.edu.mimuw.cloudatlas.agent.fetcher.Fetcher;
-import pl.edu.mimuw.cloudatlas.agent.framework.Address;
-import pl.edu.mimuw.cloudatlas.agent.framework.EventQueue;
-import pl.edu.mimuw.cloudatlas.agent.framework.Message;
-import pl.edu.mimuw.cloudatlas.agent.framework.EmptyMessage;
+import pl.edu.mimuw.cloudatlas.agent.framework.*;
 import pl.edu.mimuw.cloudatlas.agent.modules.*;
+import pl.edu.mimuw.cloudatlas.model.Attribute;
+import pl.edu.mimuw.cloudatlas.model.AttributesMap;
+import pl.edu.mimuw.cloudatlas.model.ValueQuery;
+import pl.edu.mimuw.cloudatlas.model.ValueString;
 
 import java.nio.file.Paths;
 
@@ -30,7 +31,7 @@ public class Agent {
         }
 
         ConfigurationProvider configurationProvider = new ConfigurationProviderBuilder()
-                .withConfigurationSource(new ClasspathConfigurationSource(() -> Paths.get(configurationFile)))
+                .withConfigurationSource(new ClasspathConfigurationSource(() -> Paths.get(DEFAULT_CONFIGURATION)))
                 .build();
 
         String agentId = configurationProvider.getProperty("Agent.agentId", String.class);
@@ -45,11 +46,19 @@ public class Agent {
                 .executor(InterpreterModule.class)
                 .executor(CommunicationModule.class)
                 .executor(TimerModule.class)
+                .executor(VerifierModule.class)
                 .build();
 
         Message message = new EmptyMessage();
         message.setAddress(new Address(GossipModule.class, GossipModule.INIT_GOSSIP));
         eq.sendMessage(message);
+
+        AttributesMap attributesMap = new AttributesMap();
+        attributesMap.addOrChange(new Attribute("&nmembers"), new ValueQuery("&nmembers", "SELECT sum(nmembers) AS nmembers"));
+        attributesMap.addOrChange(new Attribute("&contacts"), new ValueQuery("&contacts", "SELECT random(10, distinct(unfold(contacts))) AS contacts"));
+        Message message1 = new GenericMessage<>(attributesMap);
+        message1.setAddress(new Address(ZMIModule.class, ZMIModule.ADD_OR_CHANGE_ATTRIBUTES));
+        eq.sendMessage(message1);
 
         eq.start();
 

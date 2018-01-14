@@ -36,7 +36,7 @@ import java.util.Map.Entry;
  * references to its father and sons in the tree.
  */
 public class ZMI implements Cloneable, Serializable {
-	private final AttributesMap attributes = new AttributesMap();
+	private AttributesMap attributes = new AttributesMap();
 	
 	private final List<ZMI> sons = new ArrayList<ZMI>();
 	private ZMI father;
@@ -119,6 +119,10 @@ public class ZMI implements Cloneable, Serializable {
 	 */
 	public AttributesMap getAttributes() {
 		return attributes;
+	}
+
+	public void setAttributes(AttributesMap attributes) {
+		this.attributes = attributes;
 	}
 	
 	/**

@@ -17,7 +17,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.*;
 
-@Module(value = "RMIModule", unique = true, dependencies = {"ZMIModule", "GossipModule"})
+@Module(value = "RMIModule", unique = true)//, dependencies = {"ZMIModule", "GossipModule"})
 public class RMIModule extends ModuleBase {
 
     private static Logger LOGGER = LogManager.getLogger(RMIModule.class);
@@ -26,6 +26,7 @@ public class RMIModule extends ModuleBase {
     public static final int RESPOND_ZONES = 2;
 
     private Long rmiTimeout;
+    private String rmiName;
     private ConcurrentMap<PathName, BlockingQueue<AttributesMap>> attributesQueue = new ConcurrentHashMap<>();
     private BlockingQueue<Set<PathName>> zonesQueue = new LinkedBlockingQueue<>();
 
@@ -33,9 +34,7 @@ public class RMIModule extends ModuleBase {
 
         @Override
         public void setAttributes(PathName pathName, AttributesMap attributesMap) throws RemoteException {
-            attributesMap.addOrChange(ZMIModule.ID, new ValueString(pathName.toString()));
-
-            Address address = new Address(ZMIModule.class, ZMIModule.UPDATE_ATTRIBUTES);
+            Address address = new Address(ZMIModule.class, ZMIModule.ADD_OR_CHANGE_ATTRIBUTES);
             Message msg = new GenericMessage<>(attributesMap);
             sendMessage(address, msg);
 
@@ -68,12 +67,25 @@ public class RMIModule extends ModuleBase {
         }
 
         @Override
-        public void installQuery(Attribute attribute, ValueString value) throws RemoteException {
+        public void installQuery(Attribute attribute, ValueQuery value) throws RemoteException {
+            try {
+                AttributesMap attributesMap = new AttributesMap();
+                attributesMap.addOrChange(attribute, value);
+
+                Address address = new Address(VerifierModule.class, VerifierModule.VERIFY_QUERIES);
+                Message msg = new GenericMessage<>(attributesMap);
+                sendMessage(address, msg);
+                LOGGER.debug("INSTALL_QUERY: OUT:" + msg.toString());
+
+            } catch (Exception e) {
+                LOGGER.error("INSTALL_QUERY: " + e.getMessage(), e);
+                throw new RemoteException();
+            }
         }
 
-        @Override
-        public void uninstallQuery(Attribute attribute) throws RemoteException {
-        }
+//        @Override
+//        public void uninstallQuery(Attribute attribute) throws RemoteException {
+//        }
 
         @Override
         public Set<PathName> getAgentZones() throws RemoteException {
@@ -96,11 +108,17 @@ public class RMIModule extends ModuleBase {
 
         @Override
         public void setFallbackContacts(Set<ValueContact> contacts) throws RemoteException {
-            Address address = new Address(ZMIModule.class, GossipModule.SET_FALLBACK_CONTACTS);
-            ValueContact[] valueContacts = (ValueContact[]) contacts.toArray();
-            Message msg = new GenericMessage<>(valueContacts);
-            sendMessage(address, msg);
-            LOGGER.debug("SET_FALLBACK_CONTACTS: OUT: " + msg.toString());
+            try {
+                LOGGER.debug("SET_FALLBACK_CONTACTS");
+
+                Address address = new Address(ZMIModule.class, GossipModule.SET_FALLBACK_CONTACTS);
+                ValueContact[] valueContacts = (ValueContact[]) contacts.toArray();
+                Message msg = new GenericMessage<>(valueContacts);
+                sendMessage(address, msg);
+                LOGGER.debug("SET_FALLBACK_CONTACTS: OUT: " + msg.toString());
+            } catch (Exception e) {
+                LOGGER.error("SET_FALLBACK_CONTACTS: " + e.getMessage(), e);
+            }
         }
     };
 
@@ -125,14 +143,18 @@ public class RMIModule extends ModuleBase {
     };
 
     @Handler(RESPOND_ZONES)
-    private final MessageHandler<?> h2 = new MessageHandler<GenericMessage<PathName[]>>() {
+    private final MessageHandler<?> h2 = new MessageHandler<GenericMessage<ValueSet>>() {
         @Override
-        protected void handle(GenericMessage<PathName[]> message) {
+        protected void handle(GenericMessage<ValueSet> message) {
             try {
 
                 LOGGER.debug("RESPOND_ZONES: IN:" + message.toString());
 
-                zonesQueue.put(new HashSet<>(Arrays.asList(message.getData())));
+                Set<PathName> pathNames = new HashSet<>();
+                for (Value value : message.getData().getValue()) {
+                    pathNames.add(new PathName(((ValueString) value).getValue()));
+                }
+                zonesQueue.put(new HashSet<>(pathNames));
 
             } catch (Exception e) {
                 LOGGER.error("RESPOND_ZONES: " + e.getMessage(), e);
@@ -144,6 +166,7 @@ public class RMIModule extends ModuleBase {
     public void initialize(ConfigurationProvider configurationProvider) {
 
         String agentId = configurationProvider.getProperty("Agent.agentId", String.class);
+        rmiName = configurationProvider.getProperty("Agent.RMIModule.rmiName", String.class);
         rmiTimeout = configurationProvider.getProperty("Agent.RMIModule.rmiTimeout", Long.class);
 
         if (System.getSecurityManager() == null) {
@@ -153,7 +176,7 @@ public class RMIModule extends ModuleBase {
         try {
             AgentInterface stub = (AgentInterface) UnicastRemoteObject.exportObject(server, 0);
             Registry registry = LocateRegistry.getRegistry();
-            registry.rebind(agentId, stub);
+            registry.rebind(rmiName, stub);
 
         } catch (RemoteException e) {
             LOGGER.error("RMI module error", e);

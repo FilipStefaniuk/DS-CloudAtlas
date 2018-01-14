@@ -39,6 +39,11 @@ public class TypePrimitive extends Type {
 	 * Contact type.
 	 */
 	public static final TypePrimitive CONTACT = new TypePrimitive(PrimaryType.CONTACT);
+
+	/**
+	 *
+	 */
+	public static final TypePrimitive QUERY = new TypePrimitive(PrimaryType.QUERY);
 	
 	/**
 	 * Double type.
@@ -82,6 +87,7 @@ public class TypePrimitive extends Type {
 			case DURATION:
 			case INT:
 			case NULL:
+			case QUERY:
 			case STRING:
 			case TIME:
 				break;

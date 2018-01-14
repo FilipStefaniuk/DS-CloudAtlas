@@ -86,7 +86,7 @@ public class GossipModule extends ModuleBase {
                     if (zmi != null) {
                         for (ZMI son : zmi.getSons()) {
                             ValueString sonRep = (ValueString) son.getAttributes().getOrNull(ZMIModule.REP);
-                            ValueSet sonContacts = (ValueSet) son.getAttributes().getOrNull(ZMIModule.CONTACTS);
+                            ValueList sonContacts = (ValueList) son.getAttributes().getOrNull(ZMIModule.CONTACTS);
 
                             if (!agentId.equals(new PathName(sonRep.getValue())) && !sonContacts.isEmpty()) {
                                 zmiWithContacts.add(son);
@@ -97,8 +97,8 @@ public class GossipModule extends ModuleBase {
                     ValueContact contact;
                     if (!zmiWithContacts.isEmpty()) {
                         ZMI toGossip = zmiWithContacts.get(random.nextInt(zmiWithContacts.size()));
-                        Set<Value> valuesSet = ((ValueSet) toGossip.getAttributes().getOrNull(ZMIModule.CONTACTS)).getValue();
-                        Value selectedValue = new ArrayList<>(valuesSet).get(random.nextInt(valuesSet.size()));
+                        List<Value> valueList = ((ValueList) toGossip.getAttributes().getOrNull(ZMIModule.CONTACTS)).getValue();
+                        Value selectedValue = new ArrayList<>(valueList).get(random.nextInt(valueList.size()));
                         contact = (ValueContact) selectedValue;
                     } else if (!fallbackContacts.isEmpty()) {
                         LOGGER.warn("INIT_GOSSIP: using fallback contacts");
@@ -130,7 +130,7 @@ public class GossipModule extends ModuleBase {
         @Override
         protected void handle(FromNetworkMessage<ZMIInfo> message) {
             try {
-                LOGGER.debug("EXCHANGE_INFO: IN: " + message.toString());
+                LOGGER.debug("EXCHANGE_INFO: IN: " + message.toString() + message.getData().toString());
 
                 ZMIInfo otherInfo = message.getData();
                 ZMIInfo myInfo = new ZMIInfo(root, agentId, otherInfo.getSelectedZMI());
@@ -172,7 +172,7 @@ public class GossipModule extends ModuleBase {
         @Override
         protected void handle(FromNetworkMessage<GossipData> message) {
             try {
-                LOGGER.debug("UPDATE_ZMIS: IN: " + message.toString());
+                LOGGER.debug("UPDATE_ZMIS: IN: " + message.toString() + message.getData().toString());
 
                 if (!message.getData().getRequests().isEmpty()) {
                     GossipData gossipData = new GossipData(root, new ArrayList<>(), message.getData().requests, message.getData().delay);
@@ -221,8 +221,8 @@ public class GossipModule extends ModuleBase {
             delay = configurationProvider.getProperty("Agent.GossipModule.delay", Long.class);
 
             fallbackContacts.addAll(Arrays.asList(
-                    new ValueContact(new PathName("/uw/khaki13"), InetAddress.getLocalHost(), 19901),
-                    new ValueContact(new PathName("/uw/pink02"), InetAddress.getLocalHost(), 19902)));
+                    new ValueContact(new PathName("/uw/cpu1"), InetAddress.getLocalHost(), 19901),
+                    new ValueContact(new PathName("/uw/cpu2"), InetAddress.getLocalHost(), 19902)));
 
         } catch (Exception e) {
 
@@ -259,6 +259,15 @@ public class GossipModule extends ModuleBase {
 
         public List<AttributesMap> getData() {
             return data;
+        }
+
+        @Override
+        public String toString() {
+            return "GossipData{" +
+                    "requests=" + requests +
+                    ", data=" + data +
+                    ", delay=" + delay +
+                    '}';
         }
     }
 
@@ -322,7 +331,7 @@ public class GossipModule extends ModuleBase {
 
             for (Info info : zmiInfo.zones) {
                 Info myInfo = zonesMap.get(info.id);
-                if (myInfo != null && (info.issued >= (myInfo.issued + timeOffset) || myInfo.res.equals(agentId))) {
+                if (myInfo != null && (info.issued >= (myInfo.issued + timeOffset) || myInfo.res.equals(zmiInfo.agentId))) {
                     zonesMap.remove(info.id);
                 }
             }

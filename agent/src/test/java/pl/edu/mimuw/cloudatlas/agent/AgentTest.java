@@ -9,7 +9,10 @@ import pl.edu.mimuw.cloudatlas.model.PathName;
 import pl.edu.mimuw.cloudatlas.model.ValueString;
 import pl.edu.mimuw.cloudatlas.model.ZMI;
 
+import java.net.InetAddress;
 import java.nio.ByteBuffer;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 
 public class AgentTest {
 
@@ -45,15 +48,13 @@ public class AgentTest {
 //        eq.start();
     }
 
-//    @Test
-//    public void testBuffer() throws Exception {
-//        ByteBuffer buffer = ByteBuffer.allocate(100);
-//        buffer.putInt(11);
-//        buffer.flip();
-//        int a = buffer.getInt();
-//
-//        System.out.println(a);
-//    }
+    @Test
+    public void testBuffer() throws Exception {
+        PathName pathName1 = new PathName("/uw/cpu01");
+        PathName pathName2 = new PathName("/pjwstk/cpu01");
+
+        System.out.println(pathName1.equals(pathName2));
+    }
 
     @Test
     public void testPathName() throws Exception {

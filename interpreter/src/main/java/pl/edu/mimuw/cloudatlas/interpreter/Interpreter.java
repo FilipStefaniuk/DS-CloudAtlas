@@ -121,13 +121,15 @@ public class Interpreter {
 		throw new InvalidTypeException(TypePrimitive.BOOLEAN, value.getType());
 	}
 
+
+	public static Program parseProgram(String query) throws Exception {
+		Yylex lex = new Yylex(new ByteArrayInputStream(query.getBytes()));
+		return new parser(lex).pProgram();
+	}
+
 	public List<QueryResult> executeQuery(String query) throws Exception {
-
 		try {
-			Yylex lex = new Yylex(new ByteArrayInputStream(query.getBytes()));
-			return interpretProgram((new parser(lex)).pProgram());
-
-
+			return interpretProgram(Interpreter.parseProgram(query));
 		} catch (InterpreterException e) {
 			return new ArrayList<>();
 		}

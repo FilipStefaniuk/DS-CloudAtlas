@@ -19,7 +19,8 @@
         <module>model</module>
         <module>interpreter</module>
         <module>agent</module>
-        <module>client</module>
+        <module>querySigner</module>
+        <module>webclient</module>
 
     </modules>
 

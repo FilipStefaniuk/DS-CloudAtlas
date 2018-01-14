@@ -36,7 +36,7 @@ public class ValueContact extends Value {
 	private final PathName name;
 	private final InetAddress address;
 	private final Integer port;
-	
+
 	/**
 	 * Constructs a new <code>ValueContact</code> with the specified path name and IP address.
 	 * 
@@ -99,5 +99,15 @@ public class ValueContact extends Value {
 	@Override
 	public boolean isNull() {
 		return name == null || address == null || port == null;
+	}
+
+	@Override
+	public Value isEqual(Value value) {
+		sameTypesOrThrow(value, Operation.EQUAL);
+		ValueContact valueContact = (ValueContact) value.convertTo(TypePrimitive.CONTACT);
+		return new ValueBoolean(
+				name.equals(valueContact.name) &&
+				address.equals(valueContact.address) &&
+				port.equals(valueContact.port));
 	}
 }

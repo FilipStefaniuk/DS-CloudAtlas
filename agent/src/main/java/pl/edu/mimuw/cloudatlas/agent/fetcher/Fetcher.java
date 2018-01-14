@@ -34,18 +34,20 @@ public class Fetcher {
                 .build();
 
         String agentId = configurationProvider.getProperty("Agent.agentId", String.class);
+        String agentRMIname = configurationProvider.getProperty("Agent.RMIModule.rmiName", String.class);
+        Integer interval = configurationProvider.getProperty("Fetcher.interval", Integer.class);
 
         SystemInfo systemInfo = new SystemInfo();
         PathName pathName = new PathName(agentId);
         Registry registry = LocateRegistry.getRegistry(HOST);
-        AgentInterface stub = (AgentInterface) registry.lookup(agentId);
+        AgentInterface stub = (AgentInterface) registry.lookup(agentRMIname);
 
         while (true) {
             systemInfo.updateAttributes();
 
             stub.setAttributes(pathName, systemInfo.getAttributes());
 
-            TimeUnit.SECONDS.sleep(INTERVAL);
+            TimeUnit.MILLISECONDS.sleep(interval);
         }
     }
 }

@@ -13,6 +13,7 @@ public class FromNetworkMessage<T extends Serializable> extends GenericMessage<T
     private Integer senderPort;
     private PathName senderId;
 
+
     public FromNetworkMessage(T value, InetAddress senderAddress, Integer senderPort, PathName senderId) {
         super(value);
         this.senderAddress = senderAddress;

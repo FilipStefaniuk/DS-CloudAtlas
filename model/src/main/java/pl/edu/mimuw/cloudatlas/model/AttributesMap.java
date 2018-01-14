@@ -245,7 +245,13 @@ public class AttributesMap implements Iterable<Entry<Attribute, Value>>, Cloneab
 	public void remove(String name) {
 		map.remove(new Attribute(name));
 	}
-	
+
+
+	public boolean isEmpty() {
+		return map.isEmpty();
+	}
+
+
 	/**
 	 * Returns an iterator over all entries stored in this map.
 	 * 
@@ -280,4 +286,6 @@ public class AttributesMap implements Iterable<Entry<Attribute, Value>>, Cloneab
 	public String toString() {
 		return map.toString();
 	}
+
+
 }
