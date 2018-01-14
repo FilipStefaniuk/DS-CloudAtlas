@@ -1,4 +1,4 @@
-package pl.edu.mimuw.cloudatlas;
+package pl.edu.mimuw.cloudatlas.webclient;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

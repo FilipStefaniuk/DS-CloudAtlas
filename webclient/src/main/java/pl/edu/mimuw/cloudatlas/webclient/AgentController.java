@@ -1,8 +1,7 @@
-package pl.edu.mimuw.cloudatlas;
+package pl.edu.mimuw.cloudatlas.webclient;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import pl.edu.mimuw.cloudatlas.model.AttributesMap;
 
 import java.util.List;
 import java.util.Map;
