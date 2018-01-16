@@ -2,6 +2,7 @@ package pl.edu.mimuw.cloudatlas.agent.modules;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.tools.picocli.CommandLine;
 import org.cfg4j.provider.ConfigurationProvider;
 import pl.edu.mimuw.cloudatlas.agent.framework.*;
 import pl.edu.mimuw.cloudatlas.agent.messages.*;
@@ -22,7 +23,12 @@ public class GossipModule extends ModuleBase {
     public static final int EXCHANGE_INFO = 4;
     public static final int UPDATE_ZMIS = 5;
 
+    private static final int RANDOM_STRATEGY = 1;
+    private static final int RANDOM_EXPONENTIAL_STRATEGY = 2;
+    private static final int ROUND_ROBIN_STRATEGY = 3;
+
     private ZMI root = null;
+    private Strategy strategy;
     private Long delay;
     private PathName agentId;
     private Long nextId = 0L;
@@ -61,12 +67,6 @@ public class GossipModule extends ModuleBase {
     @Handler(INIT_GOSSIP)
     private final MessageHandler<?> h3 = new MessageHandler<Message>() {
 
-        //TODO Change that
-        private PathName selectRandomZMI(PathName pathName) {
-            List<String> zones = pathName.getComponents();
-            return new PathName(zones.subList(0, random.nextInt(zones.size())));
-        }
-
         @Override
         protected void handle(Message message) {
             try {
@@ -79,7 +79,7 @@ public class GossipModule extends ModuleBase {
                 LOGGER.debug("INIT_GOSSIP: OUT: " + timerMsg.toString());
 
                 if (root != null) {
-                    PathName selectedZone = selectRandomZMI(agentId);
+                    PathName selectedZone = strategy.selectZone(agentId);
 
                     ZMI zmi = ZMIModule.zmiByID(root, selectedZone);
                     List<ZMI> zmiWithContacts = new ArrayList<>();
@@ -219,13 +219,28 @@ public class GossipModule extends ModuleBase {
 
             agentId = new PathName(configurationProvider.getProperty("Agent.agentId", String.class));
             delay = configurationProvider.getProperty("Agent.GossipModule.delay", Long.class);
+            Integer strategyId = configurationProvider.getProperty("Agent.GossipModule.strategy", Integer.class);
+
+            switch (strategyId) {
+                case RANDOM_STRATEGY:
+                    strategy = new RandomStrategy();
+                    break;
+                case RANDOM_EXPONENTIAL_STRATEGY:
+                    strategy = new RandomExponentialStrategy();
+                    break;
+                case ROUND_ROBIN_STRATEGY:
+                    strategy = new RoundRobinStrategy();
+                    break;
+                default:
+                    throw new Exception("Wrong strategy id");
+            }
 
             fallbackContacts.addAll(Arrays.asList(
                     new ValueContact(new PathName("/uw/cpu1"), InetAddress.getLocalHost(), 19901),
                     new ValueContact(new PathName("/uw/cpu2"), InetAddress.getLocalHost(), 19902)));
 
         } catch (Exception e) {
-
+            LOGGER.error("INITIALIZE: " + e.getMessage(), e);
         }
 
     }
@@ -370,4 +385,44 @@ public class GossipModule extends ModuleBase {
         }
     }
 
+    private abstract class Strategy {
+        public abstract PathName selectZone(PathName pathName);
+    }
+
+    private class RandomStrategy extends Strategy{
+
+        @Override
+        public PathName selectZone(PathName pathName) {
+            List<String> zones = pathName.getComponents();
+            return new PathName(zones.subList(0, random.nextInt(zones.size())));
+        }
+    }
+
+    private class RandomExponentialStrategy extends Strategy {
+
+        @Override
+        public PathName selectZone(PathName pathName) {
+            List<String> zones = pathName.getComponents();
+
+            PathName result = new PathName("/");
+            for (String zone : zones) {
+                if (random.nextDouble() > 0.5) {
+                    return result;
+                }
+                result.levelDown(zone);
+            }
+            return result;
+        }
+    }
+
+    private class RoundRobinStrategy extends Strategy {
+        private Integer next = 0;
+
+        @Override
+        public PathName selectZone(PathName pathName) {
+            List<String> zones = pathName.getComponents();
+            next = (next + 1) % zones.size();
+            return new PathName(zones.subList(0, next));
+        }
+    }
 }
