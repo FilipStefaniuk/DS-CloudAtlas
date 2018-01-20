@@ -28,6 +28,7 @@ public class ZMIModule extends ModuleBase {
     public static final String Q_NMEMBERS = "&nmembers";
     public static final String Q_CONTACTS = "&contacts";
 
+    private Integer zmiRemoveTime;
     private PathName agentId;
     private String host;
     private Integer port;
@@ -62,6 +63,18 @@ public class ZMIModule extends ModuleBase {
                 }
 
                 zmi.setAttributes(message.getData());
+
+
+                Long currentTime = System.currentTimeMillis();
+                List<ZMI> cleanedZMIs = new ArrayList<>();
+                for (ZMI son : zmi.getSons()) {
+                    ValueInt issued = (ValueInt) son.getAttributes().getOrNull(ISSUED);
+                    if (currentTime - issued.getValue() < zmiRemoveTime) {
+                        cleanedZMIs.add(son);
+                    }
+                }
+                zmi.setSons(cleanedZMIs);
+
 
                 if (!zmi.equals(root)) {
                     ZMI father = zmi.getFather();
@@ -191,6 +204,7 @@ public class ZMIModule extends ModuleBase {
         agentId = new PathName(configurationProvider.getProperty("Agent.agentId", String.class));
         port = configurationProvider.getProperty("Agent.port", Integer.class);
         host = configurationProvider.getProperty("Agent.host", String.class);
+        zmiRemoveTime = configurationProvider.getProperty("Agent.ZMIModule.zmiRemoveTime", Integer.class);
         singleton = initZMI(agentId);
 
         singleton.getAttributes().addOrChange(new Attribute("nmembers"), new ValueInt(1L));

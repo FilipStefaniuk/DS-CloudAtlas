@@ -1,4 +1,4 @@
-grant codeBase "file:/home/filip/Documents/cloudatlas/querySigner/target/querySigner-1.0-SNAPSHOT-jar-with-dependencies.jar" {
+grant codeBase "file:./querySigner/target/querySigner-1.0-SNAPSHOT-jar-with-dependencies.jar" {
     permission java.security.AllPermission;
 };
 

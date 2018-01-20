@@ -38,7 +38,7 @@ import java.util.Map.Entry;
 public class ZMI implements Cloneable, Serializable {
 	private AttributesMap attributes = new AttributesMap();
 	
-	private final List<ZMI> sons = new ArrayList<ZMI>();
+	private List<ZMI> sons = new ArrayList<ZMI>();
 	private ZMI father;
 	
 	/**
@@ -88,7 +88,11 @@ public class ZMI implements Cloneable, Serializable {
 	public List<ZMI> getSons() {
 		return Collections.unmodifiableList(sons);
 	}
-	
+
+	public void setSons(List<ZMI> sons) {
+		this.sons = sons;
+	}
+
 	/**
 	 * Adds the specified ZMI to the list of sons of this ZMI. This method does not perform any operation on a
 	 * <code>son</code>. Especially, setting this object as a <code>son</code>'s father must be done separately.

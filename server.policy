@@ -6,7 +6,7 @@
 // course. It is intended for internal use only.
 //
 
-grant codeBase "file:/home/filip/Documents/cloudatlas/agent/target/agent-1.0-SNAPSHOT-jar-with-dependencies.jar" {
+grant codeBase "file:./agent/target/agent-1.0-SNAPSHOT-jar-with-dependencies.jar" {
     permission java.security.AllPermission;
 };
 
