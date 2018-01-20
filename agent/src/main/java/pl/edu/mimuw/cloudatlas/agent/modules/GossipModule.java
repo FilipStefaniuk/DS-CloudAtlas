@@ -108,7 +108,8 @@ public class GossipModule extends ModuleBase {
                         zmi = ZMIModule.zmiByID(root, selectedZone);
 
                     } else {
-                        throw new HandlerException("No fallback contacts");
+                        LOGGER.warn("INIT_GOSSIP: no fallback contacts");
+                        return;
                     }
 
                     GenericMessage<?> msg = new GenericMessage<>(new ZMIInfo(root, agentId, selectedZone));
@@ -235,9 +236,9 @@ public class GossipModule extends ModuleBase {
                     throw new Exception("Wrong strategy id");
             }
 
-            fallbackContacts.addAll(Arrays.asList(
-                    new ValueContact(new PathName("/uw/cpu1"), InetAddress.getLocalHost(), 19901),
-                    new ValueContact(new PathName("/uw/cpu2"), InetAddress.getLocalHost(), 19902)));
+//            fallbackContacts.addAll(Arrays.asList(
+//                    new ValueContact(new PathName("/uw/cpu1"), InetAddress.getLocalHost(), 19901),
+//                    new ValueContact(new PathName("/uw/cpu2"), InetAddress.getLocalHost(), 19902)));
 
         } catch (Exception e) {
             LOGGER.error("INITIALIZE: " + e.getMessage(), e);

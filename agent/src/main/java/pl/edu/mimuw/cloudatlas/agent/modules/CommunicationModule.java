@@ -34,6 +34,7 @@ public class CommunicationModule extends ModuleBase {
     public static final int CLEAR = 2;
 
     private Integer port;
+    private String host;
     private PathName agentId;
     private Long clearDelay;
     private Long retryConnectDelay;
@@ -87,7 +88,7 @@ public class CommunicationModule extends ModuleBase {
                     DatagramChannel channel = DatagramChannel.open();
 
                     FromNetworkMessage<?> toSendMessage =
-                            new FromNetworkMessage<>(msg.getMessage().getData(), InetAddress.getLocalHost(), port, agentId);
+                            new FromNetworkMessage<>(msg.getMessage().getData(), InetAddress.getByName(host), port, agentId);
                     toSendMessage.setAddress(msg.getMessage().getAddress());
 
                     byte [] bytes = SerializationUtils.serialize(toSendMessage);
@@ -215,6 +216,7 @@ public class CommunicationModule extends ModuleBase {
         clearDelay = configurationProvider.getProperty("Agent.CommunicationModule.clearDelay", Long.class);
         retryConnectDelay = configurationProvider.getProperty("Agent.CommunicationModule.retryBindSocketDelay", Long.class);
         agentId = new PathName(configurationProvider.getProperty("Agent.agentId", String.class));
+        host = configurationProvider.getProperty("Agent.host", String.class);
 
         sender.start();
         receiver.start();

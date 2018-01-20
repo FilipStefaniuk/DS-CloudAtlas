@@ -1,5 +1,10 @@
 package pl.edu.mimuw.cloudatlas.agent;
 
+import org.cfg4j.provider.ConfigurationProvider;
+import org.cfg4j.provider.ConfigurationProviderBuilder;
+import org.cfg4j.source.ConfigurationSource;
+import org.cfg4j.source.classpath.ClasspathConfigurationSource;
+import org.cfg4j.source.compose.MergeConfigurationSource;
 import org.junit.Test;
 import pl.edu.mimuw.cloudatlas.agent.framework.*;
 import pl.edu.mimuw.cloudatlas.agent.messages.*;
@@ -11,6 +16,7 @@ import pl.edu.mimuw.cloudatlas.model.ZMI;
 
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
+import java.nio.file.Paths;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
@@ -48,42 +54,52 @@ public class AgentTest {
 //        eq.start();
     }
 
-    @Test
-    public void testBuffer() throws Exception {
-        PathName pathName1 = new PathName("/uw/cpu01");
-        PathName pathName2 = new PathName("/pjwstk/cpu01");
+//    @Test
+//    public void testBuffer() throws Exception {
+//        PathName pathName1 = new PathName("/uw/cpu01");
+//        PathName pathName2 = new PathName("/pjwstk/cpu01");
+//
+//        System.out.println(pathName1.equals(pathName2));
+//        ConfigurationSource conf = new ClasspathConfigurationSource(() -> Paths.get(Agent.DEFAULT_CONFIGURATION));
+//        ConfigurationSource conf2 = new ClasspathConfigurationSource(() -> Paths.get("agent1.properties"));
+//        conf = new MergeConfigurationSource(conf, conf2);
+//        ConfigurationProvider configurationProvider = new ConfigurationProviderBuilder()
+//                .withConfigurationSource(conf)
+//                .build();
 
-        System.out.println(pathName1.equals(pathName2));
-    }
+//        System.out.println(configurationProvider.allConfigurationAsProperties());
 
-    @Test
-    public void testPathName() throws Exception {
-//        PathName pathName = new PathName("/uw/violet02");
-//        System.out.println(pathName.getComponents());
+//        System.out.println(Paths.get("./agent1.config"));
+//    }
 
-//        System.out.println(PathName.getLCA(new PathName("/a/v/fdasfasd/c/asdf/sdfs"), new PathName("/a/v/c")));
-
-        ZMI root = new ZMI();
-        root.getAttributes().add(ZMIModule.ID, new ValueString(""));
-
-        ZMI zmi1 = new ZMI(root);
-        zmi1.getAttributes().add(ZMIModule.ID, new ValueString("/uw"));
-
-        ZMI zmi2 = new ZMI(root);
-        zmi2.getAttributes().add(ZMIModule.ID, new ValueString("/pjstk"));
-
-        ZMI zmi3 = new ZMI(zmi1);
-        zmi3.getAttributes().add(ZMIModule.ID, new ValueString("/uw/violet07"));
-
-        ZMI zmi4 = new ZMI(zmi1);
-        zmi4.getAttributes().add(ZMIModule.ID, new ValueString("/uw/khaki13"));
-
-        root.addSon(zmi1);
-        root.addSon(zmi2);
-
-        zmi1.addSon(zmi3);
-        zmi1.addSon(zmi4);
-
-        System.out.println(ZMIModule.zmiByID(root, new PathName("/asf")));
-    }
+//    @Test
+//    public void testPathName() throws Exception {
+////        PathName pathName = new PathName("/uw/violet02");
+////        System.out.println(pathName.getComponents());
+//
+////        System.out.println(PathName.getLCA(new PathName("/a/v/fdasfasd/c/asdf/sdfs"), new PathName("/a/v/c")));
+//
+//        ZMI root = new ZMI();
+//        root.getAttributes().add(ZMIModule.ID, new ValueString(""));
+//
+//        ZMI zmi1 = new ZMI(root);
+//        zmi1.getAttributes().add(ZMIModule.ID, new ValueString("/uw"));
+//
+//        ZMI zmi2 = new ZMI(root);
+//        zmi2.getAttributes().add(ZMIModule.ID, new ValueString("/pjstk"));
+//
+//        ZMI zmi3 = new ZMI(zmi1);
+//        zmi3.getAttributes().add(ZMIModule.ID, new ValueString("/uw/violet07"));
+//
+//        ZMI zmi4 = new ZMI(zmi1);
+//        zmi4.getAttributes().add(ZMIModule.ID, new ValueString("/uw/khaki13"));
+//
+//        root.addSon(zmi1);
+//        root.addSon(zmi2);
+//
+//        zmi1.addSon(zmi3);
+//        zmi1.addSon(zmi4);
+//
+//        System.out.println(ZMIModule.zmiByID(root, new PathName("/asf")));
+//    }
 }

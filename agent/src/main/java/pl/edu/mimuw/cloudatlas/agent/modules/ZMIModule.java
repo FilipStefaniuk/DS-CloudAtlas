@@ -29,6 +29,7 @@ public class ZMIModule extends ModuleBase {
     public static final String Q_CONTACTS = "&contacts";
 
     private PathName agentId;
+    private String host;
     private Integer port;
     private ZMI root;
     private ZMI singleton;
@@ -189,6 +190,7 @@ public class ZMIModule extends ModuleBase {
     public void initialize(ConfigurationProvider configurationProvider) {
         agentId = new PathName(configurationProvider.getProperty("Agent.agentId", String.class));
         port = configurationProvider.getProperty("Agent.port", Integer.class);
+        host = configurationProvider.getProperty("Agent.host", String.class);
         singleton = initZMI(agentId);
 
         singleton.getAttributes().addOrChange(new Attribute("nmembers"), new ValueInt(1L));
@@ -214,7 +216,7 @@ public class ZMIModule extends ModuleBase {
             }
 
             List<Value> contacts = new ArrayList<>();
-            contacts.add(new ValueContact(agentId, InetAddress.getLocalHost(), port));
+            contacts.add(new ValueContact(agentId, InetAddress.getByName(host), port));
 
             zone.getAttributes().add(ID, new ValueString(currentZone.toString()));
             zone.getAttributes().add(REP, new ValueString(agentId.toString()));

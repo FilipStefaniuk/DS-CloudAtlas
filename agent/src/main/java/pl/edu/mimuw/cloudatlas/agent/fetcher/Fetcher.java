@@ -4,7 +4,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cfg4j.provider.ConfigurationProvider;
 import org.cfg4j.provider.ConfigurationProviderBuilder;
+import org.cfg4j.source.ConfigurationSource;
 import org.cfg4j.source.classpath.ClasspathConfigurationSource;
+import org.cfg4j.source.compose.MergeConfigurationSource;
+import pl.edu.mimuw.cloudatlas.agent.Agent;
 import pl.edu.mimuw.cloudatlas.agent.AgentInterface;
 import pl.edu.mimuw.cloudatlas.model.*;
 
@@ -17,20 +20,20 @@ public class Fetcher {
 
     private static Logger LOGGER = LogManager.getLogger(Fetcher.class);
 
-    private static final String HOST = "localhost";
-    private static final Integer INTERVAL = 1;
-
     public static void main(String[] args) throws Exception {
 
         LOGGER.info("Fetcher starting");
 
+        ConfigurationSource conf = new ClasspathConfigurationSource(() -> Paths.get(Agent.DEFAULT_CONFIGURATION));
 
-        if (args.length == 0) {
-            throw new Exception();
+
+        if (args.length > 0) {
+            ConfigurationSource customConf = new ClasspathConfigurationSource(()-> Paths.get(args[0]));
+            conf = new MergeConfigurationSource(conf, customConf);
         }
 
         ConfigurationProvider configurationProvider = new ConfigurationProviderBuilder()
-                .withConfigurationSource(new ClasspathConfigurationSource(() -> Paths.get(args[0])))
+                .withConfigurationSource(conf)
                 .build();
 
         String agentId = configurationProvider.getProperty("Agent.agentId", String.class);
@@ -39,7 +42,7 @@ public class Fetcher {
 
         SystemInfo systemInfo = new SystemInfo();
         PathName pathName = new PathName(agentId);
-        Registry registry = LocateRegistry.getRegistry(HOST);
+        Registry registry = LocateRegistry.getRegistry();
         AgentInterface stub = (AgentInterface) registry.lookup(agentRMIname);
 
         while (true) {

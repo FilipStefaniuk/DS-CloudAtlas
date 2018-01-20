@@ -22,7 +22,7 @@ public class EventQueue {
 
     private static Logger LOGGER = LogManager.getLogger(EventQueue.class);
 
-    public static Builder builder(String configuration) {
+    public static Builder builder(ConfigurationProvider configuration) {
         return new EventQueue.Builder(configuration);
     }
 
@@ -33,14 +33,9 @@ public class EventQueue {
         private ModuleBase.ModuleFactory moduleFactory = ModuleBase.moduleFacotry(eventQueue);
         private ConfigurationProvider config;
 
-        private Builder(String configuration) {
+        private Builder(ConfigurationProvider configuration) {
 
-            ConfigurationSource source = new ClasspathConfigurationSource(() -> Paths.get(configuration));
-
-            config = new ConfigurationProviderBuilder()
-                    .withConfigurationSource(source)
-                    .build();
-        }
+            config = configuration;        }
 
         @SafeVarargs
         public final Builder executor(Class<? extends ModuleBase> ... modules) throws IllegalStateException, IllegalArgumentException {
